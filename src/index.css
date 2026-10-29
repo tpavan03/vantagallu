@@ -1,0 +1,14 @@
+/* Kitchen styling lives in kitchen.css; this baseline covers every overflow surface. */
+html { scrollbar-color: #8a9d90 #edf2eb; scrollbar-width: thin; scrollbar-gutter: stable; }
+body { margin: 0; min-width: 320px; }
+*, *::before, *::after { box-sizing: border-box; }
+button, select, summary { cursor: pointer; }
+button:disabled, select:disabled { cursor: not-allowed; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #edf2eb; }
+::-webkit-scrollbar-thumb { background: #8a9d90; border: 2px solid #edf2eb; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #536e5d; }
+.app-update { padding: 12px 20px; background: #183f31; color: #fff; font: 14px/1.5 system-ui, sans-serif; text-align: center; }
+.app-update button { margin-left: 12px; min-height: 44px; border: 1px solid #d9e8d9; border-radius: 8px; padding: 8px 12px; background: #eef7e9; color: #183a2b; }
+.app-update button:focus-visible { outline: 3px solid #ffd86f; outline-offset: 3px; }
+@media (forced-colors: active) { html { scrollbar-color: auto; } }
