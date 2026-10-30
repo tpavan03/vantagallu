@@ -2,13 +2,14 @@
 
 Inspected 2026-10-30. These are source-adapted cooking plans written independently for Vantagallu. No publisher prose, photographs, videos, nutrition panels or scraped instruction text is bundled. Ingredient facts are stored in `src/content/source-facts.ts`; independently written methods are in `starter-methods.ts` the three core records in `src/data/recipes.ts`, and eight mainstream additions in `src/content/mainstream.ts`. The original publishers retain their works; the app links directly to the specific recipe pages.
 
-All 72 records have `reviewStatus: needs-kitchen-test`. The source pages were checked for their actual ingredient list and method; this does not mean the publisher approved these adaptations or that Vantagallu cooked them. The app must show the publisher, selected method and status before a session starts. Do not call these “official”, “chef-approved” or “kitchen-tested”.
+All 73 records have `reviewStatus: needs-kitchen-test`. The source pages were checked for their actual ingredient list and method; this does not mean the publisher approved these adaptations or that Vantagallu cooked them. The app must show the publisher, selected method and status before a session starts. Do not call these “official”, “chef-approved” or “kitchen-tested”.
 
 ## Sources used
 
-- [Vismai Food recipe index](https://vismaifood.com/en/recipes): primary publisher for 63 records. Attribution is to Vismai Food; no unverified individual-chef byline is invented.
-- [Dassana’s Veg Recipes](https://www.vegrecipesofindia.com/): eight primary recipes below have the verified byline Dassana Amit.
-- [Swasthi’s Recipes](https://www.indianhealthyrecipes.com/): the new Chicken 65 plan follows the specifically linked recipe’s untempered Chennai-style option, with verified byline Swasthi Shreekanth.
+- [Vismai Food recipe index](https://vismaifood.com/en/recipes): the main Telugu-channel publisher. Attribution is to Vismai Food; no unverified individual-chef byline is invented.
+- [Dassana’s Veg Recipes](https://www.vegrecipesofindia.com/): primary recipe methods with the verified byline Dassana Amit.
+- [Swasthi’s Recipes](https://www.indianhealthyrecipes.com/): independently summarized ready-powder methods and Chicken 65, with verified byline Swasthi Shreekanth.
+- [Cookd](https://www.cookdtv.com/recipes/gongura-mutton) and [Sailu’s Food](https://www.sailusfood.com/gutti-vankaya-kura-stuffed-egg-plant-brinjal-curry): specific published household variants with ready masala powders.
 - Vahrehvah was investigated as a future author-method source, but the relevant recipe page could not be reliably accessed in this run. No current recipe is falsely attributed to Vahchef or Food on Farm.
 
 ## Interpretation rules
@@ -64,13 +65,21 @@ All 72 records have `reviewStatus: needs-kitchen-test`. The source pages were ch
 
 ## Mainstream additions
 
-Eight named targets were promoted to cookable plans: plain fermented dosa, coconut and onion chutneys, medu vada, gutti vankaya, Hyderabadi chicken dum biryani, vegetable dum biryani and Chicken 65. The coverage manifest remains 300, with 72 available and 228 planned. Existing 64 recipe versions and semantics are unchanged.
+Eight named targets were promoted to cookable plans: plain fermented dosa, coconut and onion chutneys, medu vada, gutti vankaya, Hyderabadi chicken dum biryani, vegetable dum biryani and Chicken 65. The coverage manifest remains 300, with 73 available and 227 planned. That initial expansion preserved the existing 64 methods; the subsequent household-powder revision below adds explicit new versions.
 
 - Plain dosa and medu vada use explicitly estimated two-piece portions and include soaking/fermentation in prep.
-- Gutti vankaya uses the source’s peanut/coconut stuffed-brinjal method. Cooker liquid and pressure timings require appliance-specific checks.
+- Gutti vankaya originally used the peanut/coconut stuffing; its new default below uses Sailu’s onion-garlic powder stuffing. Saved source versions remain available.
 - Hyderabadi chicken dum biryani rejects the source’s advice to marinate raw chicken outside refrigeration. Small source spoons are interpreted as teaspoons, its big rice-water spoon as one tablespoon; this is an editorial assumption. Add actual 74°C thermometer verification, rather than treating the short source dum schedule as safe by itself.
 - Vegetable dum biryani is the source’s hariyali variant. Food colour and kapok buds are omitted; ambiguous repeated whole nutmeg becomes one optional small pinch ground nutmeg. Salt in drained rice water is to taste. These are visible editorial adaptations, not a claimed exact reproduction.
 - Chicken 65 uses Swasthi’s untempered Chennai-style variant. Despite the URL saying no egg, the current source explicitly offers one egg white or 2½ tablespoons extra yogurt. The chosen plan contains egg white, with egg and milk allergens; its listed swap changes only that coating ingredient.
+
+## Household powder revision
+
+The new default methods use actual published ready-powder routes for chicken curry, pepper chicken, gongura mutton, family fish pulusu, South Indian egg curry, gutti vankaya and drumstick sambar. `powder-methods.ts` applies versioned overrides while preserving the earlier base records and archived cooking sessions. Method changes update ingredients, equipment, preparation, steps and checkpoints together. Cookd’s gongura method contains spinach; Sailu’s brinjal method uses onion-garlic stuffing; the egg method is labeled South Indian rather than presenting it as the former Telangana nut gravy. These are named variants, not claims of an identical regional recipe.
+
+Existing ground-spice volumes use exact kitchen-volume conversions: 1 tbsp = 3 tsp; 1 cup = 48 tsp. No density, mass-to-volume or whole-seed conversion is inferred. Literal source pinches remain pinches. Paramannam selects the existing cardamom-powder option instead of adding optional pods as well. Fresh vegetables, nuts, coconut pastes and essential whole tempering/biryani aromatics remain normal ingredients. Distinctive roast-and-grind chutney, podi, rasam and Nellore methods have not been falsely replaced by a generic mix.
+
+The new Chicken sherva follows Vismai’s published 350 g chicken batch with 1 tsp chicken masala, 3¾ tsp coriander and 2¼ tsp chilli, choosing its prepared-stock shortcut. Its blend dose is specific to this method. Chicken masala, garam masala and curry powders are not universally interchangeable; check salt, chilli, allergens and package dose. Step instructions refer to the measured rail so changes in servings do not leave stale fixed powder amounts in prose.
 
 ## Specific recipe links
 
@@ -103,16 +112,16 @@ Eight named targets were promoted to cookable plans: plain fermented dosa, cocon
 | Sorakaya pappu | Vismai Food | [Recipe page](https://vismaifood.com/en/Sorakaya-Pappu-BottleGourd-Dal-Lauki-dal) |
 | Miriyala pappu charu | Vismai Food | [Recipe page](https://vismaifood.com/en/miriyala-pappu-charu-recipe-black-pepper-dal-rasam-pepper-dal-rasam) |
 | Rayalaseema mutton fry | Vismai Food | [Recipe page](https://vismaifood.com/en/mutton-fry-andhra-style-spicy-mutton-fry-rayalaseema-style-mutton-fry-how-make-spicy-mutton-fry) |
-| Andhra chepala pulusu | Vismai Food | [Recipe page](https://vismaifood.com/en/fish-curry-chepala-pulusu-how-make-fish-curry-fish-masala-podi) |
+| Andhra chepala pulusu | Swasthi’s Recipes / Swasthi Shreekanth | [Recipe page](https://www.indianhealthyrecipes.com/fish-pulusu-south-indian-fish-curry-recipe/) |
 | Andhra royyala masala | Vismai Food | [Recipe page](https://vismaifood.com/en/andhra-style-spicy-prawns-masala-curry-how-to-make-prawns-masala-fry) |
-| Gongura mutton | Vismai Food | [Recipe page](https://vismaifood.com/en/andhra-style-gongura-mutton-mutton-curry-how-to-make-gongura-mutton) |
-| Fresh masala chicken curry | Vismai Food | [Recipe page](https://vismaifood.com/en/easy-spicy-chicken-curry) |
+| Gongura mutton | Cookd | [Recipe page](https://www.cookdtv.com/recipes/gongura-mutton) |
+| Chicken curry · everyday powders | Swasthi’s Recipes / Swasthi Shreekanth | [Recipe page](https://www.indianhealthyrecipes.com/chicken-curry/) |
 | Village-style mutton curry | Vismai Food | [Recipe page](https://vismaifood.com/en/village-style-mutton-curry-mutton-curry-how-to-make-mutton-curry-in-village-style) |
 | Nellore chepala pulusu | Vismai Food | [Recipe page](https://vismaifood.com/en/nellore-chepala-pulusu-fish-curry-nellore-fish-curry-chapala-pulusu) |
 | Tomato chicken | Vismai Food | [Recipe page](https://vismaifood.com/en/tomato-chicken-thick-gravy-chicken-curry-how-make-spicy-tomato-chicken-curry-thick-gravy) |
-| Pepper chicken fry | Vismai Food | [Recipe page](https://vismaifood.com/en/pepper-chicken-fry-dry-pepper-chicken-fry-how-make-chicken-fry) |
+| Pepper chicken fry | Swasthi’s Recipes / Swasthi Shreekanth | [Recipe page](https://www.indianhealthyrecipes.com/pepper-chicken-recipe/) |
 | Telangana chicken fry | Vismai Food | [Recipe page](https://vismaifood.com/en/telangana-restaurant-style-chicken-fry-chicken-roast) |
-| Telangana masala egg curry | Vismai Food | [Recipe page](https://vismaifood.com/en/telangana-style-masala-egg-curry-egg-gravy-recipe-thick-masala-egg-gravy-recipe) |
+| South Indian egg curry | Swasthi’s Recipes / Swasthi Shreekanth | [Recipe page](https://www.indianhealthyrecipes.com/spicy-andhra-egg-curry-south-indian-egg-recipes/) |
 | Beerakaya egg bhurji | Vismai Food | [Recipe page](https://vismaifood.com/en/ridged-gourd-scrambled-eggs-turai-egg-bhurji-masala-beerakaya-egg-burji-peerkangai-muttai-poriyal-recipe) |
 | Tomato egg pulusu | Vismai Food | [Recipe page](https://vismaifood.com/en/tomato-egg-drop-curry-easy-tomato-egg-pulusu) |
 | Kerala coconut milk egg curry | Vismai Food | [Recipe page](https://vismaifood.com/en/kerala-style-egg-curry-egg-curry) |
@@ -130,7 +139,7 @@ Eight named targets were promoted to cookable plans: plain fermented dosa, cocon
 | Ragi neer dosa | Vismai Food | [Recipe page](https://vismaifood.com/en/perfect-ragi-neer-dosa-recipe-ragi-neer-dosa-ragi-dosa) |
 | Udupi pepper rasam | Vismai Food | [Recipe page](https://vismaifood.com/en/udupi-style-pepper-rasam-recipe-no-garlic-festive-special) |
 | Karnataka cabbage saagu | Vismai Food | [Recipe page](https://vismaifood.com/en/karnataka-special-cabbage-kurma-cabbage-saagu-cabbage-curry) |
-| Munakkada sambar | Vismai Food | [Recipe page](https://vismaifood.com/en/munakkada-sambar-munkkaya-sambar-drumstick-sambar-munakkada-sambar-vismai-food) |
+| Munakkada sambar | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/drumstick-sambar-recipe/) |
 | Sambar saadham | Vismai Food | [Recipe page](https://vismaifood.com/en/sambar-rice-sambar-saadam-how-to-make-sambar-rice) |
 | Mambazha pulissery | Vismai Food | [Recipe page](https://vismaifood.com/en/mango-kadhli-mambazha-pulisserry-recipe-mambalam-pulisseri-mango-buttermilk-stew) |
 | Rice paramannam | Vismai Food | [Recipe page](https://vismaifood.com/en/easy-cooker-kheer-rice-kheer-payasam-or-paramannam) |
@@ -144,10 +153,11 @@ Eight named targets were promoted to cookable plans: plain fermented dosa, cocon
 | Coconut chutney | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/coconut-chutney-recipe-coconut-chutney/) |
 | Onion chutney | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/onion-chutney-recipe/) |
 | Medu vada | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/medu-vada-recipe-medu-vada/) |
-| Gutti vankaya kura | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/gutti-vankaya-kura-recipe/) |
+| Gutti vankaya kura | Sailu’s Food / Sailu | [Recipe page](https://www.sailusfood.com/gutti-vankaya-kura-stuffed-egg-plant-brinjal-curry) |
 | Hyderabadi chicken dum biryani | Vismai Food | [Recipe page](https://vismaifood.com/en/hyderabadi-chicken-dum-biryani-how-to-make-hyderabadi-chicken-dum-biryani) |
 | Vegetable dum biryani | Vismai Food | [Recipe page](https://vismaifood.com/en/haryali-veg-dum-biryani-vegetable-dum-biryani-hyderabadi-biryani) |
 | Chicken 65 | Swasthi’s Recipes / Swasthi Shreekanth | [Recipe page](https://www.indianhealthyrecipes.com/chicken-65-recipe-no-egg-restaurant-style-chicken-recipes/) |
+| Chicken sherva | Vismai Food | [Recipe page](https://vismaifood.com/en/chicken-sherva-chicken-salna-best-dosa-chapathi-and-rice-how-make-chicken-shorva) |
 
 ## Appliance correction guidance
 

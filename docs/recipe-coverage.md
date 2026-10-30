@@ -1,10 +1,10 @@
 # Recipe coverage
 
-Snapshot: 2026-10-30. **72 cookable source-adapted starters; 228 named planned entries; 300 total coverage targets.** No entry is independently kitchen-tested by Vantagallu. “Available” means that quantities, a cooking plan and specific source attribution exist, not that the recipe is officially endorsed or clinically reviewed.
+Snapshot: 2026-10-30. **73 cookable source-adapted starters; 227 named planned entries; 300 total coverage targets.** No entry is independently kitchen-tested by Vantagallu. “Available” means that quantities, a cooking plan and specific source attribution exist, not that the recipe is officially endorsed or clinically reviewed.
 
 The canonical API is `recipeCatalog: Recipe[]` and `getRecipeById(id)` in `src/data/recipes.ts`. `recipeCoverageManifest` in `src/data/coverage.ts` is a separate commissioning manifest. Planned dishes never become cookable through a search result or a server seed.
 
-The 72 starters cover Andhra, Telangana, Rayalaseema, Tamil, Karnataka, Kerala and shared South Indian methods. English instructions and English/Telugu titles are supplied. Kannada/Hindi instructions are not fabricated translations; the selected-language agent must explain the same canonical recipe context.
+The 73 starters cover Andhra, Telangana, Rayalaseema, Tamil, Karnataka, Kerala and shared South Indian methods. English instructions and English/Telugu titles are supplied. Kannada/Hindi instructions are not fabricated translations; the selected-language agent must explain the same canonical recipe context.
 
 | Family | Available | Planned | Target |
 | --- | ---: | ---: | ---: |
@@ -13,7 +13,7 @@ The 72 starters cover Andhra, Telangana, Rayalaseema, Tamil, Karnataka, Kerala a
 | Pappu, charu, rasam and sambar | 7 | 23 | 30 |
 | Vegetable curries and fries | 8 | 32 | 40 |
 | Rice, pulao and biryani | 10 | 20 | 30 |
-| Chicken and egg | 9 | 26 | 35 |
+| Chicken and egg | 10 | 25 | 35 |
 | Mutton and offal | 3 | 12 | 15 |
 | Fish, prawns and other seafood | 3 | 17 | 20 |
 | Pickles | 0 | 10 | 10 |
@@ -243,15 +243,16 @@ Each target below is a real named dish or meaningful method variant. The remaini
 
 | Dish / method | Status | Recipe ID |
 | --- | --- | --- |
-| Fresh masala chicken curry | available | `chicken-curry` |
+| Chicken curry · everyday powders | available | `chicken-curry` |
 | Tomato chicken | available | `tomato-chicken` |
 | Pepper chicken fry | available | `pepper-chicken` |
 | Telangana chicken fry | available | `telangana-chicken-fry` |
-| Telangana masala egg curry | available | `telangana-egg-curry` |
+| South Indian egg curry | available | `telangana-egg-curry` |
 | Beerakaya egg bhurji | available | `ridge-gourd-egg` |
 | Tomato egg pulusu | available | `tomato-egg-pulusu` |
 | Kerala coconut milk egg curry | available | `kerala-egg-curry` |
 | Chicken 65 | available | `chicken-65` |
+| Chicken sherva | available | `chicken-sherva` |
 | Andhra kodi pulusu | planned | — |
 | Naatukodi pulusu | planned | — |
 | Gongura chicken | planned | — |
@@ -277,7 +278,6 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Egg bhurji | planned | — |
 | Onion chilli omelette | planned | — |
 | Egg coconut kurma | planned | — |
-| Egg keema masala | planned | — |
 
 ## Mutton and offal
 

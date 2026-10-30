@@ -5,7 +5,7 @@ import { authenticate } from '../auth.ts'
 import { readConfig } from '../config.ts'
 import { ApiError } from '../errors.ts'
 import type { CommitResult, Repository, VoiceLease } from '../repository.ts'
-import type { CommandRequest, CookingSession, Recipe } from '../../src/domain/types.ts'
+import type { CommandRequest, CookingSession, CookingSetup, Recipe } from '../../src/domain/types.ts'
 import { createCookingSession } from '../../src/domain/session.ts'
 import { deepseekTurn } from '../providers.ts'
 
@@ -139,6 +139,75 @@ describe('canonical command commits', () => {
     expect(session.recipeVersion).toBe(1); expect(session.recipeSnapshot).toEqual(recipe)
     expect(session.recipeSnapshot.ingredients[0].quantity).toBe(2)
     expect(local.recipeSnapshot.ingredients[0].quantity).toBe(9999)
+  })
+})
+
+describe('cooking setup and induction guidance', () => {
+  const gas: CookingSetup = { heatSource: 'gas', inductionMaxWatts: 1800, availableIngredientIds: ['tomato'], unavailableIngredientIds: [] }
+  const induction: CookingSetup = { heatSource: 'induction', inductionMaxWatts: 1200, availableIngredientIds: [], unavailableIngredientIds: ['tomato'], pantryNotes: 'I also have tamarind and ginger; neither has been added yet.' }
+
+  it('persists setup at creation and through a revision-checked change and reload', async () => {
+    const repository = new MemoryRepository(), handler = app(repository)
+    const created = await handler(request('/api/sessions', { id, recipeId: recipe.id, cookingSetup: gas }))
+    expect(created.status).toBe(201)
+    expect((await created.json()).session.cookingSetup).toEqual(gas)
+    const changed = await handler(request(`/api/sessions/${id}/commands`, { commandId: 'change-cooking-setup', expectedRevision: 0, command: { type: 'set_cooking_setup', setup: induction } }))
+    expect(changed.status).toBe(200)
+    const reloaded = (await (await handler(request(`/api/sessions/${id}`))).json()).session
+    expect(reloaded.cookingSetup).toEqual(induction)
+    expect(reloaded.revision).toBe(1)
+    expect(reloaded.steps).toEqual(recipe.steps)
+    expect(reloaded.addedIngredients).toEqual([])
+    expect((await (await handler(request('/api/sessions'))).json()).sessions[0].cookingSetup).toEqual(induction)
+  })
+
+  it('rejects impossible power and pantry declarations without committing', async () => {
+    const invalid = [
+      { ...gas, inductionMaxWatts: 1801 }, { ...gas, inductionMaxWatts: 99 }, { ...gas, inductionMaxWatts: 1200.5 },
+      { ...gas, availableIngredientIds: ['unknown'] },
+      { ...gas, availableIngredientIds: ['tomato', 'tomato'] },
+      { ...gas, unavailableIngredientIds: ['tomato'] },
+      { ...gas, pantryNotes: 'x'.repeat(2001) },
+    ]
+    for (const [index, setup] of invalid.entries()) {
+      const repository = new MemoryRepository(), handler = app(repository), before = structuredClone(repository.state)
+      expect((await handler(request('/api/sessions', { recipeId: recipe.id, cookingSetup: setup }))).status, `create ${index}`).toBe(400)
+      expect((await handler(request(`/api/sessions/${id}/commands`, { commandId: `bad-setup-${index}`, expectedRevision: 0, command: { type: 'set_cooking_setup', setup } }))).status, `command ${index}`).toBe(400)
+      expect(repository.state).toEqual(before)
+    }
+  })
+
+  it('retains a valid imported setup and extra pantry items while rejecting forged references', async () => {
+    const repository = new MemoryRepository(), handler = app(repository), local = structuredClone(repository.state)
+    local.extraIngredients = [{ id: 'lime', name: { en: 'Lime' }, quantity: 1, unit: 'piece' }]
+    local.cookingSetup = { ...induction, availableIngredientIds: ['tomato'], unavailableIngredientIds: ['lime'] }
+    local.steps[0].inductionWatts = 900
+    const imported = await handler(request('/api/sessions', { id, recipeId: recipe.id, localSession: local }))
+    expect(imported.status).toBe(201)
+    const { session } = await imported.json()
+    expect(session.cookingSetup).toEqual(local.cookingSetup)
+    expect(session.steps[0].inductionWatts).toBe(900)
+    expect(session.extraIngredients).toEqual(local.extraIngredients)
+    for (const setup of [{ ...induction, unavailableIngredientIds: ['invented'] }, { ...induction, availableIngredientIds: ['tomato'], unavailableIngredientIds: ['tomato'] }]) {
+      expect((await handler(request('/api/sessions', { id, recipeId: recipe.id, localSession: { ...local, cookingSetup: setup } }))).status).toBe(400)
+    }
+    for (const step of [{ ...local.steps[0], inductionWatts: 1500 }, { ...local.steps[0], heat: 'off', inductionWatts: 900 }, { ...local.steps[0], inductionWatts: 0 }]) {
+      expect((await handler(request('/api/sessions', { id, recipeId: recipe.id, localSession: { ...local, steps: [step, local.steps[1]] } }))).status).toBe(400)
+    }
+  })
+
+  it('accepts explicit step watt guidance only within the saved appliance limit', async () => {
+    const repository = new MemoryRepository(), handler = app(repository)
+    await handler(request('/api/sessions', { id, recipeId: recipe.id, cookingSetup: induction }))
+    const command = { type: 'revise_plan', remainingSteps: [{ ...recipe.steps[0], inductionWatts: 900 }, recipe.steps[1]], reason: 'Use the chosen induction hob.' }
+    const saved = await handler(request(`/api/sessions/${id}/commands`, { commandId: 'induction-step', expectedRevision: 0, command }))
+    expect(saved.status).toBe(200)
+    expect((await saved.json()).session.steps[0].inductionWatts).toBe(900)
+    for (const inductionWatts of [0, 99, 1201, 1801]) {
+      const response = await handler(request(`/api/sessions/${id}/commands`, { commandId: `invalid-watts-${inductionWatts}`, expectedRevision: 1, command: { ...command, remainingSteps: [{ ...recipe.steps[0], inductionWatts }] } }))
+      expect(response.status).toBe(400)
+    }
+    expect(repository.state.revision).toBe(1)
   })
 })
 

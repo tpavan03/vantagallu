@@ -150,7 +150,7 @@ export function createApp(options: AppOptions = {}) {
         const body = parse(createSessionSchema, await readJson(request))
         const localVersion = body.localSession ? parse(localRecipeReferenceSchema, body.localSession).recipeVersion : undefined
         const recipe = await requireRecipe(repository, body.recipeId, localVersion)
-        const state = body.localSession ? importLocalSession(body.localSession, recipe, principal.id, now().toISOString()) : createCookingSession(recipe, { id: body.id ?? randomUUID(), ownerId: principal.id, language: body.language, servings: body.servings, cookware: body.cookware, now: now().toISOString() })
+        const state = body.localSession ? importLocalSession(body.localSession, recipe, principal.id, now().toISOString()) : createCookingSession(recipe, { id: body.id ?? randomUUID(), ownerId: principal.id, language: body.language, servings: body.servings, cookware: body.cookware, cookingSetup: body.cookingSetup, now: now().toISOString() })
         if (body.id && body.id !== state.id) throw new ApiError(400, 'invalid_local_session', 'The imported session ID must match the new session ID.')
         return jsonResponse({ session: await repository.createSession(principal.id, state) }, 201, headers)
       }

@@ -259,16 +259,16 @@ export function useCookingRuntime(recipes: Recipe[]): KitchenAppProps {
   return {
     recipes, session, sessions: store.sessions, user: owner ? { email: owner.email || 'Signed-in owner' } : null, online, saveStatus, voiceStatus, voiceError, liveTranscript, streamingReply, chatPending, error, language: session?.language || store.language, authPending, authMessage,
     voiceAvailable: aiReady && capabilities.voice, chatAvailable: aiReady && capabilities.chat, authAvailable: Boolean(supabase),
-    onStartRecipe: recipeId => { stopMedia(true); return runSafely(async token => {
+    onStartRecipe: (recipeId, cookingSetup) => { stopMedia(true); return runSafely(async token => {
       const recipe = recipesRef.current.find(item => item.id === recipeId)
       if (!recipe) throw new Error('Choose an available recipe from the library.')
       if (hydrating.current) throw new Error('Wait for your account sessions to load before starting a new recipe.')
       const old = activeSession(storeRef.current)
       if (old?.status === 'cooking' && !storeRef.current.conflicts?.[old.id]) await commit({ type: 'set_status', status: 'paused' }, token)
       if (token !== epoch.current) return
-      const local = createCookingSession(recipe, { ownerId: ownerRef.current?.id, language: storeRef.current.language })
+      const local = createCookingSession(recipe, { ownerId: ownerRef.current?.id, language: storeRef.current.language, cookingSetup })
       if (ownerRef.current && onlineRef.current) {
-        const result = await request<{ session: CookingSession }>('/sessions', { recipeId, id: local.id, language: local.language })
+        const result = await request<{ session: CookingSession }>('/sessions', { recipeId, id: local.id, language: local.language, ...(cookingSetup ? { cookingSetup } : {}) })
         if (token !== epoch.current) return
         putSession(result.session, token, true); setSaveStatus('saved')
       } else {

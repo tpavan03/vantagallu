@@ -3,6 +3,7 @@ import type { FormEvent, ReactNode } from "react";
 import { localize } from "../domain/types";
 import type {
   CookingCommand,
+  CookingSetup,
   CookingSession,
   CookingTimer,
   Language,
@@ -14,6 +15,8 @@ import type {
 import KitchenTextarea from "./KitchenTextarea";
 import Cooker, { CookerIcon } from "./Cooker";
 import { sessionIngredients, ingredientAmount } from "../domain/session";
+import { spiceMeasure } from "../domain/measures";
+import { heatGuidance, setupAdaptationRequest } from "../domain/setup";
 import { CookingPan, IngredientDrawing } from "./CookingPan";
 import "../styles/kitchen.css";
 
@@ -37,7 +40,7 @@ export interface KitchenAppProps {
   voiceAvailable?: boolean;
   chatAvailable?: boolean;
   authAvailable?: boolean;
-  onStartRecipe: (recipeId: string) => ActionResult;
+  onStartRecipe: (recipeId: string, setup?: CookingSetup) => ActionResult;
   onResumeSession: (sessionId: string) => ActionResult;
   onLanguageChange: (language: Language) => ActionResult;
   onSendMessage: (text: string) => ActionResult;
@@ -341,6 +344,172 @@ function TimerControl({
   );
 }
 
+function defaultSetup(
+  ingredients: RecipeIngredient[],
+  saved?: CookingSetup,
+  addedIds: string[] = [],
+): CookingSetup {
+  const missing = new Set(
+    (saved?.unavailableIngredientIds || []).filter(
+      (id) => !addedIds.includes(id),
+    ),
+  );
+  return {
+    heatSource: saved?.heatSource || "gas",
+    inductionMaxWatts: saved?.inductionMaxWatts || 1800,
+    ...(saved?.pantryNotes ? { pantryNotes: saved.pantryNotes } : {}),
+    availableIngredientIds: ingredients
+      .filter((item) => !missing.has(item.id))
+      .map((item) => item.id),
+    unavailableIngredientIds: ingredients
+      .filter((item) => missing.has(item.id))
+      .map((item) => item.id),
+  };
+}
+
+function CookingSetupFields({
+  ingredients,
+  setup,
+  onChange,
+  language,
+  disabled,
+  addedIds = [],
+  recipe,
+  session,
+}: {
+  ingredients: RecipeIngredient[];
+  setup: CookingSetup;
+  onChange: (setup: CookingSetup) => void;
+  language: Language;
+  disabled: boolean;
+  addedIds?: string[];
+  recipe?: Recipe;
+  session?: CookingSession;
+}) {
+  return (
+    <div className="cooking-setup-fields">
+      <fieldset className="stove-choice">
+        <legend>What are you cooking on?</legend>
+        <label>
+          <input
+            type="radio"
+            name="heat-source"
+            value="gas"
+            checked={setup.heatSource === "gas"}
+            disabled={disabled}
+            onChange={() => onChange({ ...setup, heatSource: "gas" })}
+          />
+          <span>
+            Gas stove<small>Low, medium and high flame</small>
+          </span>
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="heat-source"
+            value="induction"
+            checked={setup.heatSource === "induction"}
+            disabled={disabled}
+            onChange={() => onChange({ ...setup, heatSource: "induction" })}
+          />
+          <span>
+            Induction<small>Up to {setup.inductionMaxWatts} W</small>
+          </span>
+        </label>
+      </fieldset>
+      <p className="field-help">
+        {setup.heatSource === "induction"
+          ? "Watt settings are starting points. Use induction-compatible cookware, check the pan and adjust; the app does not control your stove."
+          : "Follow the flame setting and cooking checkpoints. A timer alone cannot confirm doneness."}
+      </p>
+      <div className="pantry-heading">
+        <h3>What’s in your kitchen?</h3>
+        <span>{setup.unavailableIngredientIds.length} missing</span>
+      </div>
+      <p className="field-help">
+        Tick what you have; cross what’s missing. This does not mark anything as
+        added to the pan.
+      </p>
+      <div
+        className="pantry-choices"
+        role="region"
+        aria-label="Ingredients you have"
+        tabIndex={0}
+      >
+        {ingredients.map((ingredient) => {
+          const missing = setup.unavailableIngredientIds.includes(
+            ingredient.id,
+          );
+          const added = addedIds.includes(ingredient.id);
+          const amount =
+            session && recipe
+              ? ingredientAmount(recipe, session, ingredient).target
+              : ingredient.quantity;
+          const measure = spiceMeasure(
+            ingredient.name.en,
+            amount,
+            ingredient.unit,
+          );
+          return (
+            <button
+              key={ingredient.id}
+              type="button"
+              className={`pantry-choice ${missing ? "is-missing" : "is-available"}`}
+              disabled={disabled || added}
+              aria-pressed={!missing}
+              onClick={() => {
+                const unavailable = new Set(setup.unavailableIngredientIds);
+                if (missing) unavailable.delete(ingredient.id);
+                else unavailable.add(ingredient.id);
+                onChange({
+                  ...setup,
+                  unavailableIngredientIds: ingredients
+                    .filter((item) => unavailable.has(item.id))
+                    .map((item) => item.id),
+                  availableIngredientIds: ingredients
+                    .filter((item) => !unavailable.has(item.id))
+                    .map((item) => item.id),
+                });
+              }}
+            >
+              <span>
+                <strong>{localize(ingredient.name, language)}</strong>
+                <small>
+                  {/to taste|as needed/i.test(measure.unit)
+                    ? measure.unit
+                    : `${quantity(measure.quantity)} ${measure.unit}`}
+                  {ingredient.optional ? " · optional" : ""}
+                </small>
+              </span>
+              <span className="pantry-status">
+                {added ? "✓ Already added" : missing ? "× Missing" : "✓ Have"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <label className="field-label pantry-notes-label" htmlFor="pantry-notes">
+        Other ingredients I have
+      </label>
+      <KitchenTextarea
+        id="pantry-notes"
+        value={setup.pantryNotes || ""}
+        onChange={(event) =>
+          onChange({ ...setup, pantryNotes: event.target.value })
+        }
+        disabled={disabled}
+        rows={3}
+        maxLength={2000}
+        placeholder="Curd, cashews, store-bought chicken masala powder…"
+      />
+      <p className="field-help">
+        Available in your kitchen, not already added. COOKer can consider these
+        when finding a substitute.
+      </p>
+    </div>
+  );
+}
+
 export default function KitchenApp(props: KitchenAppProps) {
   const {
     recipes,
@@ -357,12 +526,19 @@ export default function KitchenApp(props: KitchenAppProps) {
   const recipe =
     session?.recipeSnapshot ||
     recipes.find((item) => item.id === session?.recipeId);
+  const updatedRecipe = session
+    ? recipes.find(
+        (item) =>
+          item.id === session.recipeId && item.version > session.recipeVersion,
+      )
+    : undefined;
   const ingredients =
     recipe && session ? sessionIngredients(recipe, session) : [];
   const stepIndex = session
     ? session.steps.findIndex((step) => step.id === session.currentStepId)
     : -1;
   const step = session?.steps[stepIndex];
+  const heatGuide = step ? heatGuidance(step, session?.cookingSetup) : null;
   const finished = session?.status === "completed";
   const [modal, setModal] = useState<
     | "recipes"
@@ -374,6 +550,7 @@ export default function KitchenApp(props: KitchenAppProps) {
     | "cookware"
     | "account"
     | "recipe"
+    | "setup"
     | null
   >(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -386,6 +563,9 @@ export default function KitchenApp(props: KitchenAppProps) {
   const [email, setEmail] = useState("");
   const [servingDraft, setServingDraft] = useState("2");
   const [cookwareDraft, setCookwareDraft] = useState("");
+  const [setupDraft, setSetupDraft] = useState<CookingSetup | null>(null);
+  const [previewSetup, setPreviewSetup] = useState<CookingSetup | null>(null);
+  const [previewSetupOpen, setPreviewSetupOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -456,6 +636,8 @@ export default function KitchenApp(props: KitchenAppProps) {
     }
   }
   function chooseRecipe(item: Recipe) {
+    setPreviewSetup(null);
+    setPreviewSetupOpen(false);
     setSelectedRecipe(item);
     setRecipeIntent("start");
     setModal("recipe");
@@ -507,6 +689,17 @@ export default function KitchenApp(props: KitchenAppProps) {
     setCookwareDraft(session?.cookware || recipe?.equipment[0] || "Pan");
     setModal("cookware");
   }
+  function openSetup() {
+    if (!session) return;
+    setSetupDraft(
+      defaultSetup(
+        ingredients,
+        session.cookingSetup,
+        session.addedIngredients.map((item) => item.ingredientId),
+      ),
+    );
+    setModal("setup");
+  }
   const statusText =
     saveStatus === "saving"
       ? "Saving…"
@@ -534,6 +727,15 @@ export default function KitchenApp(props: KitchenAppProps) {
     );
   }
   if (modal === "recipe" && selectedRecipe) {
+    const adaptOnStart = Boolean(
+      previewSetup &&
+      user &&
+      online &&
+      props.chatAvailable !== false &&
+      (previewSetup.unavailableIngredientIds.length ||
+        previewSetup.heatSource === "induction" ||
+        previewSetup.pantryNotes?.trim()),
+    );
     dialogTitle = localize(selectedRecipe.title, language);
     dialogDescription = localize(selectedRecipe.summary, language);
     dialogContent = (
@@ -550,24 +752,65 @@ export default function KitchenApp(props: KitchenAppProps) {
             ? "Source checked. Kitchen results can vary with ingredients and equipment."
             : "Kitchen testing pending. Read the method and checkpoints before starting."}
         </p>
+        {recipeIntent === "start" && (
+          <div className="preview-setup">
+            <button
+              className="setup-preview-toggle"
+              aria-expanded={previewSetupOpen}
+              onClick={() => {
+                if (!previewSetup)
+                  setPreviewSetup(defaultSetup(selectedRecipe.ingredients));
+                setPreviewSetupOpen(!previewSetupOpen);
+              }}
+            >
+              <span>Customize ingredients & stove</span>
+              <span aria-hidden="true">{previewSetupOpen ? "−" : "+"}</span>
+            </button>
+            {previewSetupOpen && previewSetup && (
+              <>
+                <CookingSetupFields
+                  ingredients={selectedRecipe.ingredients}
+                  setup={previewSetup}
+                  onChange={setPreviewSetup}
+                  language={language}
+                  disabled={busy}
+                />
+                <p className="field-help">
+                  {adaptOnStart
+                    ? "When you start, COOKer will review your setup and adapt the remaining procedure."
+                    : !user
+                      ? "Your setup is saved with this recipe. Sign in for COOKer to adapt the procedure."
+                      : "Your setup is saved with this recipe. Heat guidance follows your selected stove."}
+                </p>
+              </>
+            )}
+          </div>
+        )}
         <h3>Ingredients · {selectedRecipe.baseServings} people</h3>
         <ul className="preview-ingredients">
-          {selectedRecipe.ingredients.map((ingredient) => (
-            <li key={ingredient.id}>
-              <span>
-                {localize(ingredient.name, language)}
-                {ingredient.optional ? " · optional" : ""}
-              </span>
-              <strong>
-                {/to taste|as needed/i.test(ingredient.unit)
-                  ? ingredient.unit
-                  : `${quantity(ingredient.quantity)} ${ingredient.unit}`}
-              </strong>
-              {ingredient.allergens?.length ? (
-                <small>Contains {ingredient.allergens.join(", ")}</small>
-              ) : null}
-            </li>
-          ))}
+          {selectedRecipe.ingredients.map((ingredient) => {
+            const measure = spiceMeasure(
+              ingredient.name.en,
+              ingredient.quantity,
+              ingredient.unit,
+            );
+            return (
+              <li key={ingredient.id}>
+                <span>
+                  {localize(ingredient.name, language)}
+                  {ingredient.optional ? " · optional" : ""}
+                </span>
+                <strong>
+                  {/to taste|as needed/i.test(measure.unit)
+                    ? measure.unit
+                    : `${quantity(measure.quantity)} ${measure.unit}`}
+                </strong>
+                {ingredient.allergens?.length ? (
+                  <small>Contains {ingredient.allergens.join(", ")}</small>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
         {selectedRecipe.safetyNotes?.length ? (
           <div className="safety-notes">
@@ -610,8 +853,14 @@ export default function KitchenApp(props: KitchenAppProps) {
               return;
             }
             void perform("start", async () => {
-              await props.onStartRecipe(selectedRecipe.id);
-              closeModal();
+              await props.onStartRecipe(
+                selectedRecipe.id,
+                previewSetup || undefined,
+              );
+              if (adaptOnStart) {
+                setModal("chat");
+                await props.onSendMessage(setupAdaptationRequest);
+              } else closeModal();
             });
           }}
         >
@@ -619,7 +868,11 @@ export default function KitchenApp(props: KitchenAppProps) {
             ? "Back to cooking"
             : busyAction === "start"
               ? "Starting…"
-              : "Cook this recipe"}{" "}
+              : adaptOnStart
+                ? "Cook & adapt"
+                : previewSetup
+                  ? "Cook with my setup"
+                  : "Cook this recipe"}{" "}
           <span>→</span>
         </button>
       </div>
@@ -842,6 +1095,13 @@ export default function KitchenApp(props: KitchenAppProps) {
       "Keep the selected method. Change what needs to change.";
     dialogContent = (
       <>
+        <button className="adapt-option" onClick={openSetup} disabled={busy}>
+          <span className="adapt-mark">✓</span>
+          <span>
+            <strong>Ingredients & stove setup</strong>
+            <small>Tick what you have and choose gas or induction.</small>
+          </span>
+        </button>
         {readyTomato && (
           <button
             className="adapt-option"
@@ -918,6 +1178,58 @@ export default function KitchenApp(props: KitchenAppProps) {
           </p>
         </form>
       </>
+    );
+  }
+  if (modal === "setup" && session && recipe && setupDraft) {
+    const canAdapt = Boolean(user && online && props.chatAvailable !== false);
+    dialogTitle = "Your kitchen, before we cook.";
+    dialogDescription = "Use what you have. Keep what’s already in the pan.";
+    dialogContent = (
+      <form
+        noValidate
+        onSubmitCapture={validateForm}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!props.onCommand) return;
+          void perform("setup", async () => {
+            await props.onCommand!({
+              type: "set_cooking_setup",
+              setup: setupDraft,
+            });
+            if (canAdapt) {
+              setModal("chat");
+              await props.onSendMessage(setupAdaptationRequest);
+            } else closeModal();
+          });
+        }}
+      >
+        <CookingSetupFields
+          ingredients={ingredients}
+          setup={setupDraft}
+          onChange={setSetupDraft}
+          language={language}
+          disabled={busy || chatPending}
+          addedIds={session.addedIngredients.map((item) => item.ingredientId)}
+          recipe={recipe}
+          session={session}
+        />
+        <button
+          className="dialog-primary"
+          type="submit"
+          disabled={busy || chatPending || !props.onCommand}
+        >
+          {busyAction === "setup"
+            ? "Saving setup…"
+            : canAdapt
+              ? "Save setup & adapt"
+              : "Save setup"}
+        </button>
+        <p className="field-help">
+          {canAdapt
+            ? "Your selections are saved first. COOKer then reviews the procedure; changes appear only after they are saved."
+            : "Your setup stays saved on this device. Sign in and connect for COOKer to adapt the procedure."}
+        </p>
+      </form>
     );
   }
   if (modal === "servings") {
@@ -1020,20 +1332,57 @@ export default function KitchenApp(props: KitchenAppProps) {
     dialogDescription = "Live voice with COOKer";
     dialogContent = (
       <div className="voice-view">
-        <Cooker expanded status={voiceStatus} error={voiceError} transcript={props.liveTranscript}
-          signedIn={Boolean(user)} available={props.voiceAvailable !== false} online={online} />
-        {recipe && <div className="voice-recipe-context">
-          <span>Cooking now · {localize(recipe.title, language)}</span>
-          <p>{step ? localize(step.instruction, language) : "Your confirmed cooking session is kept."}</p>
-        </div>}
+        <Cooker
+          expanded
+          status={voiceStatus}
+          error={voiceError}
+          transcript={props.liveTranscript}
+          signedIn={Boolean(user)}
+          available={props.voiceAvailable !== false}
+          online={online}
+        />
+        {recipe && (
+          <div className="voice-recipe-context">
+            <span>Cooking now · {localize(recipe.title, language)}</span>
+            <p>
+              {step
+                ? localize(step.instruction, language)
+                : "Your confirmed cooking session is kept."}
+            </p>
+          </div>
+        )}
         <div className="voice-view-actions">
-          {!voiceActive && <button className="dialog-primary" disabled={!online || (user ? props.voiceAvailable === false : props.authAvailable === false)} onClick={() => void toggleVoice()}>
-            <CookerIcon />{!user ? "Sign in to talk" : voiceStatus === "error" ? "Retry voice" : "Talk to COOKer"}
-          </button>}
-          <button className="dialog-primary secondary" onClick={closeModal}>Back to recipe</button>
-          <button className="voice-type-link" onClick={() => setModal("chat")}>Prefer typing? Open conversation</button>
+          {!voiceActive && (
+            <button
+              className="dialog-primary"
+              disabled={
+                !online ||
+                (user
+                  ? props.voiceAvailable === false
+                  : props.authAvailable === false)
+              }
+              onClick={() => void toggleVoice()}
+            >
+              <CookerIcon />
+              {!user
+                ? "Sign in to talk"
+                : voiceStatus === "error"
+                  ? "Retry voice"
+                  : "Talk to COOKer"}
+            </button>
+          )}
+          <button className="dialog-primary secondary" onClick={closeModal}>
+            Back to recipe
+          </button>
+          <button className="voice-type-link" onClick={() => setModal("chat")}>
+            Prefer typing? Open conversation
+          </button>
         </div>
-        <p className="field-help">{voiceActive ? "Closing this view keeps voice active. Pause voice to stop the microphone." : "Voice starts only when you choose Talk. Your cooking stays in the same session."}</p>
+        <p className="field-help">
+          {voiceActive
+            ? "Closing this view keeps voice active. Pause voice to stop the microphone."
+            : "Voice starts only when you choose Talk. Your cooking stays in the same session."}
+        </p>
       </div>
     );
   }
@@ -1238,6 +1587,17 @@ export default function KitchenApp(props: KitchenAppProps) {
                 </p>
               </div>
               <div className="session-tools">
+                <button
+                  className="pill"
+                  onClick={openSetup}
+                  disabled={busy || finished}
+                >
+                  Cooking setup
+                  {session.cookingSetup?.unavailableIngredientIds.length
+                    ? ` · ${session.cookingSetup.unavailableIngredientIds.length} missing`
+                    : ""}{" "}
+                  ⌄
+                </button>
                 <button className="pill" onClick={openServings} disabled={busy}>
                   {session.servings} people ⌄
                 </button>
@@ -1267,10 +1627,43 @@ export default function KitchenApp(props: KitchenAppProps) {
                 </button>
               </div>
             </section>
+            {updatedRecipe && (
+              <section
+                className="recipe-update"
+                aria-label="Updated recipe method"
+              >
+                <p>
+                  <strong>Updated recipe available</strong>
+                  <span>
+                    Your current cooking stays saved. Start the updated method
+                    as a new session.
+                  </span>
+                </p>
+                <button
+                  className="pill"
+                  disabled={busy}
+                  onClick={() => chooseRecipe(updatedRecipe)}
+                >
+                  See updated method ↗
+                </button>
+              </section>
+            )}
             <div className="cooker-entry">
-              <Cooker status={voiceStatus} error={voiceError} transcript={props.liveTranscript}
-                signedIn={Boolean(user)} available={props.voiceAvailable !== false} online={online} />
-              <button className="cooker-open-view" onClick={() => setModal("voice")}><CookerIcon />Open voice view<span aria-hidden="true">↗</span></button>
+              <Cooker
+                status={voiceStatus}
+                error={voiceError}
+                transcript={props.liveTranscript}
+                signedIn={Boolean(user)}
+                available={props.voiceAvailable !== false}
+                online={online}
+              />
+              <button
+                className="cooker-open-view"
+                onClick={() => setModal("voice")}
+              >
+                <CookerIcon />
+                Open voice view<span aria-hidden="true">↗</span>
+              </button>
             </div>
             {session.status === "paused" && (
               <div className="paused-banner">
@@ -1332,11 +1725,12 @@ export default function KitchenApp(props: KitchenAppProps) {
                     ) : null}
                     {finished
                       ? "Stove off when finished"
-                      : step?.heat === "off"
-                        ? "No heat needed"
-                        : `${step?.heat || "medium"} heat`}
+                      : heatGuide?.label || "Check your heat"}
                   </span>
                 </div>
+                {!finished && heatGuide && (
+                  <p className="heat-guide">{heatGuide.detail}</p>
+                )}
                 <div className="instruction" aria-live="polite">
                   <h2>
                     {finished
@@ -1439,7 +1833,19 @@ export default function KitchenApp(props: KitchenAppProps) {
                   Select an ingredient to record its remaining amount as added.
                   Already-added amounts are kept.
                 </p>
-                <div className="ingredients">
+                <p
+                  className="ingredient-scroll-hint"
+                  id="ingredient-scroll-help"
+                >
+                  Scroll for ingredients <span aria-hidden="true">↕</span>
+                </p>
+                <div
+                  className="ingredients"
+                  role="region"
+                  aria-label="Recipe ingredients"
+                  aria-describedby="ingredient-scroll-help ingredient-confirmation-help"
+                  tabIndex={0}
+                >
                   {ingredients.map((ingredient) => {
                     const additions = session.addedIngredients.filter(
                       (item) => item.ingredientId === ingredient.id,
@@ -1451,14 +1857,25 @@ export default function KitchenApp(props: KitchenAppProps) {
                       ingredient,
                     );
                     const complete = amounts.remaining <= 0.0001;
+                    const missing =
+                      session.cookingSetup?.unavailableIngredientIds.includes(
+                        ingredient.id,
+                      ) && !added;
                     const amount = added ? amounts.added : amounts.target;
+                    const measure = spiceMeasure(
+                      ingredient.name.en,
+                      amount,
+                      added?.unit || ingredient.unit,
+                    );
                     return (
                       <button
                         className={`ingredient-item ${added ? "added" : ""}`}
                         key={ingredient.id}
                         aria-describedby="ingredient-confirmation-help"
                         aria-pressed={added && !complete ? "mixed" : complete}
-                        disabled={busy || complete || finished}
+                        disabled={
+                          busy || complete || finished || Boolean(missing)
+                        }
                         onClick={() =>
                           void perform("ingredient", () =>
                             props.onConfirmIngredient(ingredient),
@@ -1471,22 +1888,22 @@ export default function KitchenApp(props: KitchenAppProps) {
                         <span className="ingredient-name">
                           {localize(ingredient.name, language)}
                           <small>
-                            {/to taste|as needed/i.test(
-                              added?.unit || ingredient.unit,
-                            )
-                              ? added?.unit || ingredient.unit
-                              : `${quantity(amount)} ${added?.unit || ingredient.unit}`}
+                            {/to taste|as needed/i.test(measure.unit)
+                              ? measure.unit
+                              : `${quantity(measure.quantity)} ${measure.unit}`}
                             {ingredient.optional ? " · optional" : ""}
                           </small>
                         </span>
                         <span className="ingredient-state">
                           {complete
                             ? "Added"
-                            : added
-                              ? "Add rest"
-                              : step?.ingredientIds.includes(ingredient.id)
-                                ? "Ready"
-                                : "Later"}
+                            : missing
+                              ? "Missing · setup"
+                              : added
+                                ? "Add rest"
+                                : step?.ingredientIds.includes(ingredient.id)
+                                  ? "Ready"
+                                  : "Later"}
                         </span>
                       </button>
                     );
@@ -1577,7 +1994,13 @@ export default function KitchenApp(props: KitchenAppProps) {
         )}
         <dialog
           ref={dialog}
-          className={modal === "recipes" ? "library-dialog" : modal === "voice" ? "voice-dialog" : ""}
+          className={
+            modal === "recipes"
+              ? "library-dialog"
+              : modal === "voice"
+                ? "voice-dialog"
+                : ""
+          }
           aria-labelledby="kitchen-dialog-title"
           onCancel={closeModal}
           onClose={() => {

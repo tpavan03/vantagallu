@@ -24,9 +24,11 @@ The web app supports foreground voice. Pausing voice closes capture and the conn
 
 ## Cooking and knowledge
 
-The current starter library has 72 source-linked, independently summarized plans. The separate 300-dish coverage manifest contains 228 clearly planned entries; these do not appear as usable recipes. Every starter honestly carries a needs-kitchen-test status. Source methods are visible before starting. See docs/recipe-sources.md and docs/recipe-coverage.md for attribution and coverage.
+The current starter library has 73 source-linked, independently summarized plans. The separate 300-dish coverage manifest contains 227 clearly planned entries; these do not appear as usable recipes. Seven everyday curry methods now use published ready-powder preparations; ground-spice volume measures use teaspoons while fresh ingredients and essential tempering remain distinct. Every starter honestly carries a needs-kitchen-test status. Source methods are visible before starting. See docs/recipe-sources.md and docs/recipe-coverage.md for attribution and coverage.
 
 English, Telugu, Kannada and Hindi are voice choices. The interface preserves confirmed ingredients, quantities, cookware, completed actions, adaptations, messages and original recipe versions when a call reconnects or a language changes. Quantities already added are not retroactively rescaled.
+
+Cooking setup is available before starting and during a session. Mark ingredients Have or Missing, list other pantry ingredients and choose gas or induction (up to 1800 W). Availability does not mark anything as added. Signed-in cooks can save and request an adapted remaining plan; guests can save their setup locally. Gas steps show flame guidance; induction steps show adjustable starting watts and cooking cues, not measured temperatures or remote appliance control. Old recipe versions and completed actions remain preserved.
 
 ## Local development
 

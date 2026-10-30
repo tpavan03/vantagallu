@@ -1,5 +1,5 @@
 import { languages } from './types.ts'
-import type { CookingCommand, CookingSession, CookingTimer, Language, Recipe, RecipeIngredient, RecipeStep } from './types.ts'
+import type { CookingCommand, CookingSession, CookingSetup, CookingTimer, Language, Recipe, RecipeIngredient, RecipeStep } from './types.ts'
 
 export class DomainError extends Error {
   constructor(message: string) { super(message); this.name = 'DomainError' }
@@ -11,14 +11,26 @@ const unique = (values: string[]) => new Set(values).size === values.length
 export const sessionIngredients = (recipe: Recipe, session: CookingSession): RecipeIngredient[] => [...recipe.ingredients, ...(session.extraIngredients || [])]
 export const timerRemainingSeconds = (timer: CookingTimer, now = Date.now()) => timer.status === 'cancelled' ? 0 : timer.status === 'running' && timer.endAt ? Math.max(0, Math.ceil((Date.parse(timer.endAt) - now) / 1000)) : timer.remainingSeconds
 
-export function createCookingSession(recipe: Recipe, options: { id?: string; ownerId?: string | null; language?: Language; servings?: number; cookware?: string; now?: string } = {}): CookingSession {
+function validateSetup(setup: CookingSetup, ingredients: Set<string>) {
+  requireThat(setup && ['gas', 'induction'].includes(setup.heatSource), 'Choose gas or induction.')
+  requireThat(Number.isInteger(setup.inductionMaxWatts) && positive(setup.inductionMaxWatts, 1800) && setup.inductionMaxWatts >= 100, 'Induction power must be between 100 and 1800 W.')
+  const available = setup.availableIngredientIds, unavailable = setup.unavailableIngredientIds
+  requireThat(Array.isArray(available) && Array.isArray(unavailable) && available.length + unavailable.length <= ingredients.size, 'Choose ingredients from this cooking session.')
+  const ids = [...available, ...unavailable]
+  requireThat(unique(ids) && ids.every(id => ingredients.has(id)), 'An ingredient cannot be both available and missing; choose known ingredients once.')
+  requireThat(setup.pantryNotes === undefined || typeof setup.pantryNotes === 'string' && setup.pantryNotes.length <= 2000, 'Keep extra pantry notes under 2000 characters.')
+}
+
+export function createCookingSession(recipe: Recipe, options: { id?: string; ownerId?: string | null; language?: Language; servings?: number; cookware?: string; cookingSetup?: CookingSetup; now?: string } = {}): CookingSession {
   const now = options.now || new Date().toISOString()
   const servings = options.servings ?? recipe.baseServings
   requireThat(positive(servings, 100), 'Choose between 1 and 100 servings.')
+  if (options.cookingSetup) validateSetup(options.cookingSetup, new Set(recipe.ingredients.map(item => item.id)))
   return {
     id: options.id || crypto.randomUUID(), ownerId: options.ownerId || null,
     recipeId: recipe.id, recipeVersion: recipe.version, recipeSnapshot: structuredClone(recipe), title: recipe.title.en,
     language: options.language || 'en', servings, cookware: options.cookware || recipe.equipment[0] || 'Pan',
+    ...(options.cookingSetup ? { cookingSetup: structuredClone(options.cookingSetup) } : {}),
     steps: structuredClone(recipe.steps), currentStepId: recipe.steps[0]?.id || null,
     completedStepIds: [], addedIngredients: [], extraIngredients: [], adaptations: [], timers: [], messages: [],
     revision: 0, status: 'cooking', createdAt: now, updatedAt: now,
@@ -31,9 +43,10 @@ export function ingredientAmount(recipe: Recipe, session: CookingSession, ingred
   return { target, added, remaining: Math.max(0, target - added), overTarget: added > target + 0.0001 }
 }
 
-function validateStep(step: RecipeStep, ingredientIds: Set<string>) {
+function validateStep(step: RecipeStep, ingredientIds: Set<string>, maxWatts = 1800) {
   requireThat(validText(step.id, 80) && validText(step.instruction?.en, 2000), 'Every step needs an ID and an instruction.')
   requireThat(['off', 'low', 'medium', 'high'].includes(step.heat), 'Choose a valid heat setting.')
+  if (step.inductionWatts !== undefined) requireThat(Number.isInteger(step.inductionWatts) && step.inductionWatts >= 0 && step.inductionWatts <= maxWatts && (step.heat === 'off' ? step.inductionWatts === 0 : step.inductionWatts >= 100), 'Choose a compatible induction watt setting; heat-off steps must use 0 W.')
   requireThat(Array.isArray(step.ingredientIds) && step.ingredientIds.every(id => ingredientIds.has(id)), 'A step refers to an unknown ingredient.')
   if (step.durationSeconds !== undefined) requireThat(positive(step.durationSeconds, 172800), 'Step timing must be between one second and 48 hours.')
   for (const lang of languages) {
@@ -77,6 +90,11 @@ export function applyCookingCommand(original: CookingSession, command: CookingCo
       if (command.cookware !== session.cookware) adaptation(`Using ${command.cookware.trim()} instead of ${session.cookware}. Recheck heat, water and remaining timing for this method.`, 'method')
       session.cookware = command.cookware.trim()
       break
+    case 'set_cooking_setup':
+      validateSetup(command.setup, ingredientIds)
+      session.cookingSetup = structuredClone(command.setup)
+      adaptation(`Updated ingredient availability and ${command.setup.heatSource === 'induction' ? `induction (${command.setup.inductionMaxWatts} W maximum)` : 'gas stove'} setup. Confirmed additions remain unchanged; adapt only the remaining steps.`, 'preference')
+      break
     case 'add_custom_ingredient': {
       const item = command.ingredient
       requireThat(item && validText(item.id, 80) && !ingredientIds.has(item.id), 'Choose a new, unique ingredient ID.')
@@ -112,7 +130,7 @@ export function applyCookingCommand(original: CookingSession, command: CookingCo
       requireThat(Array.isArray(command.remainingSteps) && command.remainingSteps.length > 0 && command.remainingSteps.length <= 50, 'Provide between 1 and 50 remaining steps.')
       requireThat(validText(command.reason), 'Explain why the remaining plan is changing.')
       const completed = session.steps.filter(step => session.completedStepIds.includes(step.id))
-      for (const step of command.remainingSteps) validateStep(step, ingredientIds)
+      for (const step of command.remainingSteps) validateStep(step, ingredientIds, session.cookingSetup?.inductionMaxWatts)
       requireThat(unique([...completed, ...command.remainingSteps].map(step => step.id)), 'The remaining plan must use distinct step IDs and preserve completed steps.')
       session.steps = [...completed, ...structuredClone(command.remainingSteps)]
       session.currentStepId = command.remainingSteps[0].id

@@ -2,6 +2,7 @@ import type { Recipe, RecipeIngredient, RecipeStep } from '../domain/types.ts'
 import { sourceFacts } from '../content/source-facts.ts'
 import { starterMethods } from '../content/starter-methods.ts'
 import { mainstreamRecipes } from '../content/mainstream.ts'
+import { applyPowderMethod, chickenSherva } from '../content/powder-methods.ts'
 
 const temperatureSource = { name: 'FoodSafety.gov — safe cooking temperatures', url: 'https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures', note: 'Safety reference, not the recipe author.' }
 const handlingSource = { name: 'FoodSafety.gov — four steps to food safety', url: 'https://www.foodsafety.gov/keep-food-safe/4-steps-to-food-safety', note: 'Safety reference, not the recipe author.' }
@@ -248,6 +249,7 @@ const coreRecipes: Recipe[] = [
   },
 ]
 
-export const recipeCatalog: Recipe[] = [...coreRecipes, ...sourcedRecipes, ...mainstreamRecipes]
+export const sourceRecipeCatalog: Recipe[] = [...coreRecipes, ...sourcedRecipes, ...mainstreamRecipes]
+export const recipeCatalog: Recipe[] = [...sourceRecipeCatalog.map(applyPowderMethod), chickenSherva]
 export const recipes = recipeCatalog
 export const getRecipeById = (id: string): Recipe | undefined => recipeCatalog.find(recipe => recipe.id === id)

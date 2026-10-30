@@ -7,14 +7,25 @@ const uuid = z.string().uuid()
 const text = z.string().trim().min(1).max(4000)
 const language = z.enum(['en', 'te', 'kn', 'hi'])
 const localized = z.object({ en: text, te: text.optional(), kn: text.optional(), hi: text.optional() }).strict()
+export const cookingSetupSchema = z.object({
+  heatSource: z.enum(['gas', 'induction']),
+  inductionMaxWatts: z.number().int().min(100).max(1800),
+  availableIngredientIds: z.array(id).max(110),
+  unavailableIngredientIds: z.array(id).max(110),
+  pantryNotes: z.string().trim().max(2000).optional(),
+}).strict().superRefine((setup, context) => {
+  const ids = [...setup.availableIngredientIds, ...setup.unavailableIngredientIds]
+  if (new Set(ids).size !== ids.length) context.addIssue({ code: 'custom', path: ['availableIngredientIds'], message: 'Choose each ingredient only once, as available or missing.' })
+})
 const ingredient = z.object({ id, name: localized, quantity: z.number().positive().max(100000), unit: z.string().trim().min(1).max(40), aliases: z.array(z.string().max(100)).max(30).optional(), optional: z.boolean().optional(), allergens: z.array(z.string().max(80)).max(20).optional(), scaling: z.enum(['linear', 'to-taste', 'method-dependent']).optional() }).strict()
-const step = z.object({ id, instruction: localized, description: localized.optional(), ingredientIds: z.array(id).max(60), heat: z.enum(['off', 'low', 'medium', 'high']), durationSeconds: z.number().int().min(1).max(172800).optional(), checkpoint: localized.optional() }).strict()
+const step = z.object({ id, instruction: localized, description: localized.optional(), ingredientIds: z.array(id).max(60), heat: z.enum(['off', 'low', 'medium', 'high']), inductionWatts: z.number().int().min(0).max(1800).optional(), durationSeconds: z.number().int().min(1).max(172800).optional(), checkpoint: localized.optional() }).strict()
 const occurredAt = z.string().datetime({ offset: true }).optional()
 const timerAction = z.object({ type: z.enum(['pause_timer', 'resume_timer', 'cancel_timer']), timerId: id, occurredAt }).strict()
 export const cookingCommandSchema = z.union([
   z.object({ type: z.literal('set_language'), language }).strict(),
   z.object({ type: z.literal('set_servings'), servings: z.number().min(0.25).max(100) }).strict(),
   z.object({ type: z.literal('set_cookware'), cookware: text }).strict(),
+  z.object({ type: z.literal('set_cooking_setup'), setup: cookingSetupSchema }).strict(),
   z.object({ type: z.literal('record_ingredient'), ingredientId: id, quantity: z.number().finite().min(0).max(100000), unit: z.string().trim().min(1).max(40) }).strict(),
   z.object({ type: z.literal('add_custom_ingredient'), ingredient }).strict(),
   z.object({ type: z.literal('complete_step'), stepId: id }).strict(),
@@ -25,7 +36,7 @@ export const cookingCommandSchema = z.union([
   z.object({ type: z.literal('set_status'), status: z.enum(['cooking', 'paused', 'completed']) }).strict(),
 ])
 export const commandRequestSchema = z.object({ commandId: id, expectedRevision: z.number().int().min(0), command: cookingCommandSchema, voiceLeaseId: uuid.optional() }).strict()
-export const createSessionSchema = z.object({ recipeId: id, id: uuid.optional(), language: language.optional(), servings: z.number().min(0.25).max(100).optional(), cookware: text.optional(), localSession: z.unknown().optional() }).strict()
+export const createSessionSchema = z.object({ recipeId: id, id: uuid.optional(), language: language.optional(), servings: z.number().min(0.25).max(100).optional(), cookware: text.optional(), cookingSetup: cookingSetupSchema.optional(), localSession: z.unknown().optional() }).strict()
 export const chatSchema = z.object({ sessionId: uuid, expectedRevision: z.number().int().min(0), message: z.string().trim().min(1).max(6000), requestId: uuid }).strict()
 export const leaseSchema = z.object({ sessionId: uuid, deviceId: id, action: z.enum(['acquire', 'renew', 'release', 'takeover']), leaseId: uuid.optional() }).strict()
 export const voiceTokenSchema = z.object({ sessionId: uuid, leaseId: uuid, requestId: uuid }).strict()
@@ -42,6 +53,7 @@ const localSessionSchema = z.object({
   // replaces this field with the archived authoritative recipe after parsing.
   recipeSnapshot: z.unknown().optional().transform(() => undefined),
   id: uuid, ownerId: uuid.nullable(), recipeId: id, recipeVersion: z.number().int().positive(), title: text, language, servings: z.number().min(0.25).max(100), cookware: z.string().trim().min(1).max(160),
+  cookingSetup: cookingSetupSchema.optional(),
   steps: z.array(step).min(1).max(100), currentStepId: id.nullable(), completedStepIds: z.array(id).max(100),
   addedIngredients: z.array(z.object({ ingredientId: id, quantity: z.number().positive().max(100000), unit: z.string().min(1).max(40), addedAt: date }).strict()).max(500),
   extraIngredients: z.array(ingredient).max(50).default([]),
@@ -60,6 +72,11 @@ export function importLocalSession(value: unknown, recipe: Recipe, ownerId: stri
   require(unique(ingredients.map(item => item.id)) && unique(session.steps.map(item => item.id)) && unique(session.completedStepIds))
   require(session.completedStepIds.every(id => stepIds.has(id)) && (session.currentStepId === null || stepIds.has(session.currentStepId) && !session.completedStepIds.includes(session.currentStepId)))
   require(session.steps.every(step => step.ingredientIds.every(id => ingredientIds.has(id))))
+  if (session.cookingSetup) {
+    require([...session.cookingSetup.availableIngredientIds, ...session.cookingSetup.unavailableIngredientIds].every(id => ingredientIds.has(id)))
+  }
+  const maxWatts = session.cookingSetup?.inductionMaxWatts ?? 1800
+  require(session.steps.every(step => step.inductionWatts === undefined || step.inductionWatts <= maxWatts && (step.heat === 'off' ? step.inductionWatts === 0 : step.inductionWatts >= 100)))
   require(session.addedIngredients.every(item => ingredients.some(ingredient => ingredient.id === item.ingredientId && ingredient.unit === item.unit)))
   require(unique(session.timers.map(timer => timer.id)) && unique(session.messages.map(message => message.id)))
   require(session.timers.every(timer => (!timer.stepId || stepIds.has(timer.stepId)) && (timer.status !== 'running' || timer.endAt !== null) && (timer.status === 'running' || timer.endAt === null) && (!timer.endAt || Date.parse(timer.endAt) <= Date.parse(now) + 172800000)))

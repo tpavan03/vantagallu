@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { getRecipeById, recipeCatalog } from '../data/recipes'
+import { getRecipeById, recipeCatalog, sourceRecipeCatalog } from '../data/recipes'
 import { coverageTargets, recipeCoverageManifest } from '../data/coverage'
+import { applyPowderMethod, powderMethodIds } from './powder-methods'
+import { isSpicePowder } from '../domain/measures'
 
 describe('source-adapted recipe catalogue', () => {
   it('contains real cooking plans with unique IDs and honest provenance', () => {
@@ -14,7 +16,7 @@ describe('source-adapted recipe catalogue', () => {
       expect(recipe.authorMethod).toMatch(/not kitchen-tested/)
       const source = new URL(recipe.sources[0].url)
       expect(source.protocol).toBe('https:')
-      expect(['vismaifood.com', 'www.vegrecipesofindia.com', 'www.indianhealthyrecipes.com']).toContain(source.hostname)
+      expect(['vismaifood.com', 'www.vegrecipesofindia.com', 'www.indianhealthyrecipes.com', 'www.cookdtv.com', 'www.sailusfood.com']).toContain(source.hostname)
       expect(source.pathname.split('/').filter(Boolean).length).toBeGreaterThan(0)
       expect(recipe.sources[0].note).toContain('2026-10-30')
       expect(recipe.equipment.length).toBeGreaterThan(1)
@@ -65,6 +67,28 @@ describe('source-adapted recipe catalogue', () => {
     expect(getRecipeById('peanut-chutney')?.ingredients.find(item => item.id === 'peanuts')?.allergens).toContain('peanut')
     expect(getRecipeById('peanut-chutney')?.ingredients.find(item => item.id === 'sesame')?.allergens).toContain('sesame')
     expect(getRecipeById('mudda-pappu')?.ingredients.find(item => /asafoetida/i.test(item.name.en))?.unit).toBe('pinch')
+  })
+
+  it('uses measured powder methods without rewriting original source versions', () => {
+    for (const recipe of recipeCatalog) {
+      for (const item of recipe.ingredients.filter(item => isSpicePowder(item.name.en))) {
+        expect(['tbsp', 'cup'], `${recipe.id}/${item.id}`).not.toContain(item.unit)
+      }
+    }
+    for (const id of powderMethodIds) {
+      const original = sourceRecipeCatalog.find(recipe => recipe.id === id)!
+      const before = JSON.stringify(original)
+      const adapted = applyPowderMethod(original)
+      expect(JSON.stringify(original)).toBe(before)
+      expect(adapted.version).toBe(original.version + 1)
+      expect(adapted.steps.some(step => /toast whole|roast.*spice|grind.*masala/i.test(step.instruction.en))).toBe(false)
+    }
+    const curry = getRecipeById('chicken-curry')!
+    expect(curry.ingredients.find(item => item.id === 'coriander-powder')).toMatchObject({ quantity: 1, unit: 'tsp' })
+    expect(curry.ingredients.find(item => item.id === 'garam-masala')).toMatchObject({ quantity: 1, unit: 'tsp' })
+    const salna = getRecipeById('chicken-sherva')!
+    expect(salna.ingredients.find(item => item.id === 'chicken-masala')).toMatchObject({ quantity: 1, unit: 'tsp' })
+    expect(salna.ingredients.find(item => item.id === 'chicken')).toMatchObject({ quantity: 350, unit: 'g' })
   })
 })
 

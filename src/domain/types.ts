@@ -5,6 +5,13 @@ export type RecipeRegion = 'andhra' | 'telangana' | 'rayalaseema' | 'tamil' | 'k
 export type RecipeCategory = 'breakfast' | 'chutney' | 'podi' | 'dal' | 'curry' | 'fry' | 'rice' | 'biryani' | 'seafood' | 'pickle' | 'snack' | 'sweet'
 export type Diet = 'vegetarian' | 'vegan' | 'egg' | 'non-vegetarian'
 export type Heat = 'off' | 'low' | 'medium' | 'high'
+export interface CookingSetup {
+  heatSource: 'gas' | 'induction'
+  inductionMaxWatts: number
+  availableIngredientIds: string[]
+  unavailableIngredientIds: string[]
+  pantryNotes?: string
+}
 export interface RecipeIngredient {
   id: string
   name: LocalizedText
@@ -21,6 +28,7 @@ export interface RecipeStep {
   description?: LocalizedText
   ingredientIds: string[]
   heat: Heat
+  inductionWatts?: number
   durationSeconds?: number
   checkpoint?: LocalizedText
 }
@@ -65,6 +73,7 @@ export interface CookingSession {
   language: Language
   servings: number
   cookware: string
+  cookingSetup?: CookingSetup
   steps: RecipeStep[]
   currentStepId: string | null
   completedStepIds: string[]
@@ -82,6 +91,7 @@ export type CookingCommand =
   | { type: 'set_language'; language: Language }
   | { type: 'set_servings'; servings: number }
   | { type: 'set_cookware'; cookware: string }
+  | { type: 'set_cooking_setup'; setup: CookingSetup }
   | { type: 'record_ingredient'; ingredientId: string; quantity: number; unit: string }
   | { type: 'add_custom_ingredient'; ingredient: RecipeIngredient }
   | { type: 'complete_step'; stepId: string }

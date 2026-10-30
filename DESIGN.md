@@ -11,8 +11,6 @@ colors:
   ingredient: "#E9EFDF"
   voiceMist: "#DCEBD8"
   voiceWarm: "#F3DFB8"
-  voiceMist: "#DCEBD8"
-  voiceWarm: "#F3DFB8"
 typography:
   display:
     fontFamily: Space Grotesk
@@ -65,7 +63,7 @@ Self-hosted Space Grotesk supplies dish names, current instructions and dialog h
 
 The compact COOKer companion appears below dish context, before the cooking surface. Open voice view uses the shared dialog with a large organic blob, the real connection state, live transcript and current recipe step. Starting voice opens that view in the same user gesture. Back to recipe closes the view while preserving the live session; Pause voice explicitly stops microphone capture. The pause action stays available in every dialog while voice is active.
 
-Desktop uses a quiet wordmark/navigation row, dish context, one open cooking surface and a narrow ingredient rail. The current instruction remains the strongest text. Phones keep the same hierarchy, move ingredients into an explicit horizontal rail with a visible scrollbar, and anchor Talk/Type/Next above the safe bottom area. Normal page scrolling belongs to the document; dialogs scroll independently.
+Desktop uses a quiet wordmark/navigation row, dish context, one open cooking surface and a narrow ingredient rail. Only the ingredient list is height-bounded and scrolls vertically, with a visible inherited scrollbar and keyboard focus; its length cannot stretch the cooking board. The current instruction remains the strongest text. Phones keep the same hierarchy and move ingredients into a compact horizontal rail with a visible scrollbar. Talk/Type/Next stay anchored above the safe bottom area on every screen size. Normal page scrolling belongs to the document; dialogs scroll independently, and page bottom padding prevents the anchored controls from obscuring the final content.
 
 Recipe search, regional/diet filters, source preview, saved sessions, conversation, adaptation, quantity, cookware and account all use one shared dialog owner. Choosing a recipe shows its method, review state, ingredients, relevant safety notes and actual source links before starting. No unreviewed recipe is labeled kitchen-tested.
 
@@ -78,6 +76,8 @@ Minimal borders and elevation. The illustrated vessel has its own grounded shado
 Controls use 10px corners, dialogs 20px. Ingredients use illustrated circular counter objects. Cooking controls, timer actions and dialog close actions have a 44px minimum target; the primary voice/next row is at least 50px high.
 
 ## Components
+
+CookingSetupFields is shared by the source preview and active-session setup dialog. Whole-row pantry controls pair explicit Have/Missing text with tick/cross marks; availability never imitates an ingredient-add action. Gas and induction are labeled native radio choices. The ingredient setup list alone scrolls inside its bounded area, while the shared dialog retains natural reading and keyboard behavior. Current-step heat guidance comes from the domain helper and selected appliance, never an invented sensor value.
 
 KitchenApp.tsx is the UI boundary. It consumes shared Recipe/CookingSession/VoiceStatus/SaveStatus domain types and callback props supplied by App.tsx. It owns only transient view state: dialogs, form drafts, pending action locks and filters. Runtime, authorization, persistence, model calls, microphone transport and confirmed cooking mutations belong to App/client/domain/server owners.
 
