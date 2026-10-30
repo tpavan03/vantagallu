@@ -131,7 +131,7 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Bachali aaku pappu | available | `bachali-pappu` |
 | Sorakaya pappu | available | `sorakaya-pappu` |
 | Miriyala pappu charu | available | `pepper-pappu-charu` |
-| Udupi pepper rasam | available | `udupi-pepper-rasam` |
+| Udupi rasam · ready saaru podi | available | `udupi-pepper-rasam` |
 | Munakkada sambar | available | `drumstick-sambar` |
 | Tomato pappu | available | `tomato-pappu` |
 | Mudda pappu | available | `mudda-pappu` |

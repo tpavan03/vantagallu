@@ -3,6 +3,8 @@ import { getRecipeById, recipeCatalog, sourceRecipeCatalog } from '../data/recip
 import { coverageTargets, recipeCoverageManifest } from '../data/coverage'
 import { applyPowderMethod, powderMethodIds } from './powder-methods'
 import { isSpicePowder } from '../domain/measures'
+import { additionalPowderMethodIds, applyCompletePantryMethod } from './pantry-powder-methods'
+import { createCookingSession, ingredientAmount } from '../domain/session'
 
 describe('source-adapted recipe catalogue', () => {
   it('contains real cooking plans with unique IDs and honest provenance', () => {
@@ -16,7 +18,7 @@ describe('source-adapted recipe catalogue', () => {
       expect(recipe.authorMethod).toMatch(/not kitchen-tested/)
       const source = new URL(recipe.sources[0].url)
       expect(source.protocol).toBe('https:')
-      expect(['vismaifood.com', 'www.vegrecipesofindia.com', 'www.indianhealthyrecipes.com', 'www.cookdtv.com', 'www.sailusfood.com']).toContain(source.hostname)
+      expect(['vismaifood.com', 'www.vegrecipesofindia.com', 'www.indianhealthyrecipes.com', 'www.cookdtv.com', 'www.sailusfood.com', 'www.kannammacooks.com']).toContain(source.hostname)
       expect(source.pathname.split('/').filter(Boolean).length).toBeGreaterThan(0)
       expect(recipe.sources[0].note).toContain('2026-10-30')
       expect(recipe.equipment.length).toBeGreaterThan(1)
@@ -89,6 +91,28 @@ describe('source-adapted recipe catalogue', () => {
     const salna = getRecipeById('chicken-sherva')!
     expect(salna.ingredients.find(item => item.id === 'chicken-masala')).toMatchObject({ quantity: 1, unit: 'tsp' })
     expect(salna.ingredients.find(item => item.id === 'chicken')).toMatchObject({ quantity: 350, unit: 'g' })
+  })
+
+  it('versions the exhaustive pantry pass from the already released methods', () => {
+    for (const id of additionalPowderMethodIds) {
+      const firstRelease = applyPowderMethod(sourceRecipeCatalog.find(recipe => recipe.id === id)!)
+      const before = JSON.stringify(firstRelease)
+      const pantry = applyCompletePantryMethod(firstRelease)
+      expect(JSON.stringify(firstRelease), id).toBe(before)
+      expect(pantry.version, id).toBe(firstRelease.version + 1)
+      expect(pantry.sources.some(source => /McCormick|Kannamma/.test(source.name)), id).toBe(true)
+      const ids = new Set(pantry.ingredients.map(item => item.id))
+      for (const step of pantry.steps) for (const ingredientId of step.ingredientIds) expect(ids.has(ingredientId), `${id}/${step.id}/${ingredientId}`).toBe(true)
+    }
+    expect(getRecipeById('ava-pulihora')!.steps.find(step => step.id === 'step-1')!.instruction.en).not.toMatch(/grind mustard/i)
+    expect(getRecipeById('village-mutton-curry')!.steps.find(step => step.id === 'step-2')!.ingredientIds).toContain('ready-garam-masala')
+    for (const recipe of recipeCatalog) for (const item of recipe.ingredients) {
+      if (isSpicePowder(item.name.en) && /^(?:tsp|tbsp|cup|g|kg)$/.test(item.unit) && !/\bsalt\b/i.test(item.name.en)) {
+        expect(item.scaling, `${recipe.id}/${item.id}`).toBe('linear')
+        const one = createCookingSession(recipe, { servings: 1 })
+        expect(ingredientAmount(recipe, one, item).target, `${recipe.id}/${item.id}`).toBeCloseTo(item.quantity / recipe.baseServings)
+      }
+    }
   })
 })
 

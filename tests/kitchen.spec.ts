@@ -40,7 +40,7 @@ test('source method is visible before cooking and Escape restores focus', async 
   const card = page.locator('.recipe-row').filter({ hasText: 'Pesarattu' })
   await card.click()
   const dialog = page.getByRole('dialog')
-  await expect(dialog.getByText(/Dassana Amit — whole-moong/)).toBeVisible()
+  await expect(dialog.getByText(/Vantagallu pantry-powder adaptation of Dassana/)).toBeVisible()
   await expect(dialog.getByRole('link', { name: /Dassana’s Veg Recipes/ })).toHaveAttribute('href', /vegrecipesofindia.com\/moong-dal-dosa/)
   await page.keyboard.press('Escape')
   await expect(dialog).not.toBeVisible()
@@ -82,7 +82,7 @@ test('confirmed quantities survive resizing, reload and offline hand cooking', a
   await expect(page.getByRole('button', { name: /10 people/ })).toBeVisible()
   await context.setOffline(true)
   await page.getByRole('button', { name: 'Next step', exact: false }).click()
-  await expect(page.getByRole('heading', { name: /Blend with ginger/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Blend.*ginger/ })).toBeVisible()
   expect((await guest(page)).sessions[0].completedStepIds).toEqual(['soak'])
   expect((await guest(page)).pending).toEqual([])
 })
@@ -125,7 +125,7 @@ test('unavailable Google sign-in stays on the app and leaves guest cooking usabl
   expect(new URL(page.url()).origin).toBe(appOrigin)
   await page.keyboard.press('Escape')
   await page.getByRole('button', { name: /Next step/ }).click()
-  await expect(page.getByRole('heading', { name: /Blend with ginger/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Blend.*ginger/ })).toBeVisible()
 })
 
 test('a late cloud response cannot replace the newly selected account', async ({ page }, testInfo) => {

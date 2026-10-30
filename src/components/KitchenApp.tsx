@@ -15,7 +15,7 @@ import type {
 import KitchenTextarea from "./KitchenTextarea";
 import Cooker, { CookerIcon } from "./Cooker";
 import { sessionIngredients, ingredientAmount } from "../domain/session";
-import { spiceMeasure } from "../domain/measures";
+import { spiceMeasure, formatKitchenQuantity as quantity } from "../domain/measures";
 import { heatGuidance, setupAdaptationRequest } from "../domain/setup";
 import { CookingPan, IngredientDrawing } from "./CookingPan";
 import "../styles/kitchen.css";
@@ -105,11 +105,6 @@ const voiceLabels: Record<VoiceStatus, string> = {
   reconnecting: "Reconnecting…",
   error: "Retry voice",
 };
-const quantity = (n: number) =>
-  Number.isInteger(n)
-    ? String(n)
-    : { "0.25": "¼", "0.5": "½", "0.75": "¾", "1.5": "1½" }[String(n)] ||
-      String(Math.round(n * 100) / 100);
 const duration = (seconds: number) =>
   `${Math.floor(Math.max(0, seconds) / 60)}:${String(Math.max(0, seconds) % 60).padStart(2, "0")}`;
 
