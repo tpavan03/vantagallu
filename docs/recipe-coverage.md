@@ -1,19 +1,19 @@
 # Recipe coverage
 
-Snapshot: 2026-10-30. **64 cookable source-adapted starters; 236 named planned entries; 300 total coverage targets.** No entry is independently kitchen-tested by Vantagallu. “Available” means that quantities, a cooking plan and specific source attribution exist, not that the recipe is officially endorsed or clinically reviewed.
+Snapshot: 2026-10-30. **72 cookable source-adapted starters; 228 named planned entries; 300 total coverage targets.** No entry is independently kitchen-tested by Vantagallu. “Available” means that quantities, a cooking plan and specific source attribution exist, not that the recipe is officially endorsed or clinically reviewed.
 
 The canonical API is `recipeCatalog: Recipe[]` and `getRecipeById(id)` in `src/data/recipes.ts`. `recipeCoverageManifest` in `src/data/coverage.ts` is a separate commissioning manifest. Planned dishes never become cookable through a search result or a server seed.
 
-The 64 starters cover Andhra, Telangana, Rayalaseema, Tamil, Karnataka, Kerala and shared South Indian methods. English instructions and English/Telugu titles are supplied. Kannada/Hindi instructions are not fabricated translations; the selected-language agent must explain the same canonical recipe context.
+The 72 starters cover Andhra, Telangana, Rayalaseema, Tamil, Karnataka, Kerala and shared South Indian methods. English instructions and English/Telugu titles are supplied. Kannada/Hindi instructions are not fabricated translations; the selected-language agent must explain the same canonical recipe context.
 
 | Family | Available | Planned | Target |
 | --- | ---: | ---: | ---: |
-| Breakfast and tiffins | 14 | 31 | 45 |
-| Chutneys, pachadis and podis | 9 | 36 | 45 |
+| Breakfast and tiffins | 16 | 29 | 45 |
+| Chutneys, pachadis and podis | 11 | 34 | 45 |
 | Pappu, charu, rasam and sambar | 7 | 23 | 30 |
-| Vegetable curries and fries | 7 | 33 | 40 |
-| Rice, pulao and biryani | 8 | 22 | 30 |
-| Chicken and egg | 8 | 27 | 35 |
+| Vegetable curries and fries | 8 | 32 | 40 |
+| Rice, pulao and biryani | 10 | 20 | 30 |
+| Chicken and egg | 9 | 26 | 35 |
 | Mutton and offal | 3 | 12 | 15 |
 | Fish, prawns and other seafood | 3 | 17 | 20 |
 | Pickles | 0 | 10 | 10 |
@@ -42,7 +42,8 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Rayalaseema karam egg dosa | available | `rayalaseema-egg-dosa` |
 | Ragi rava dosa | available | `ragi-rava-dosa` |
 | Ragi neer dosa | available | `ragi-neer-dosa` |
-| Plain fermented dosa | planned | — |
+| Plain fermented dosa | available | `plain-dosa` |
+| Medu vada | available | `medu-vada` |
 | Onion uttapam | planned | — |
 | Vegetable uttapam | planned | — |
 | Pesarattu with upma filling | planned | — |
@@ -72,7 +73,6 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Ragi puttu | planned | — |
 | Pathiri | planned | — |
 | Kerala parotta | planned | — |
-| Adai | planned | — |
 
 ## Chutneys, pachadis and podis
 
@@ -87,9 +87,9 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Raw mango peanut chutney | available | `mango-peanut-chutney` |
 | Minapappu pachadi | available | `minapappu-pachadi` |
 | Dosakaya mustard pachadi | available | `dosakaya-pachadi` |
-| Coconut chutney | planned | — |
+| Coconut chutney | available | `coconut-chutney` |
+| Onion chutney | available | `onion-chutney` |
 | Roasted gram chutney | planned | — |
-| Onion chutney | planned | — |
 | Roasted tomato chutney | planned | — |
 | Coriander coconut chutney | planned | — |
 | Mint coconut chutney | planned | — |
@@ -170,7 +170,7 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Okra garlic fry | available | `okra-garlic-fry` |
 | Karnataka cabbage saagu | available | `cabbage-saagu` |
 | Mambazha pulissery | available | `mango-pulissery` |
-| Gutti vankaya kura | planned | — |
+| Gutti vankaya kura | available | `gutti-vankaya` |
 | Vankaya ullikaram | planned | — |
 | Vankaya tomato kura | planned | — |
 | Vankaya bangaladumpa kura | planned | — |
@@ -216,10 +216,11 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Chicken pulao | available | `chicken-pulao` |
 | Tomato rice | available | `tomato-rice` |
 | Sambar saadham | available | `sambar-rice` |
+| Hyderabadi chicken dum biryani | available | `hyderabadi-chicken-dum-biryani` |
+| Vegetable dum biryani | available | `vegetable-dum-biryani` |
 | Nimmakaya pulihora | planned | — |
 | Daddojanam | planned | — |
 | Bagara annam | planned | — |
-| Hyderabadi chicken dum biryani | planned | — |
 | Hyderabadi mutton dum biryani | planned | — |
 | Egg dum biryani | planned | — |
 | Gongura chicken biryani | planned | — |
@@ -237,7 +238,6 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Curd semiya | planned | — |
 | Chettinad seeraga samba chicken biryani | planned | — |
 | Ambur chicken biryani | planned | — |
-| Dindigul mutton biryani | planned | — |
 
 ## Chicken and egg
 
@@ -251,6 +251,7 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Beerakaya egg bhurji | available | `ridge-gourd-egg` |
 | Tomato egg pulusu | available | `tomato-egg-pulusu` |
 | Kerala coconut milk egg curry | available | `kerala-egg-curry` |
+| Chicken 65 | available | `chicken-65` |
 | Andhra kodi pulusu | planned | — |
 | Naatukodi pulusu | planned | — |
 | Gongura chicken | planned | — |
@@ -267,7 +268,6 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Kerala chicken roast | planned | — |
 | Kerala chicken stew | planned | — |
 | Malabar chicken curry | planned | — |
-| Chicken 65 | planned | — |
 | Chicken liver fry | planned | — |
 | Naatukodi rasam | planned | — |
 | Boiled egg pepper fry | planned | — |
@@ -345,7 +345,6 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | --- | --- | --- |
 | Chegodilu | available | `chegodilu` |
 | Andhra murukulu | available | `murukulu` |
-| Medu vada | planned | — |
 | Masala vada | planned | — |
 | Punugulu | planned | — |
 | Pesara punukulu | planned | — |
@@ -358,6 +357,7 @@ Each target below is a real named dish or meaningful method variant. The remaini
 | Sakinalu | planned | — |
 | Nippattu | planned | — |
 | Kerala banana chips | planned | — |
+| Ribbon pakoda | planned | — |
 
 ## Sweets and festival dishes
 

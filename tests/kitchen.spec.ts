@@ -17,15 +17,19 @@ async function guest(page: Page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('vantagallu:1:guest') || 'null'))
 }
 
-test('all 64 real plans are searchable and planned dishes never masquerade as available', async ({ page }) => {
+test('the full real catalogue is searchable and planned dishes never masquerade as available', async ({ page }) => {
   await page.goto('/')
-  await expect(page.locator('.result-count')).toHaveText('64 recipes')
+  await expect(page.locator('.result-count')).toHaveText(`${recipeCatalog.length} recipes`)
   await page.getByRole('combobox', { name: 'Filter by region' }).selectOption('telangana')
-  await expect(page.locator('.result-count')).toHaveText('2 recipes')
+  await expect(page.locator('.result-count')).toHaveText(`${recipeCatalog.filter(recipe => recipe.region === 'telangana').length} recipes`)
   await page.getByRole('combobox', { name: 'Filter by diet' }).selectOption('veg')
-  await expect(page.locator('.result-count')).toHaveText('0 recipes')
-  await page.getByRole('button', { name: 'Clear filters' }).click()
+  const vegetarianCount = recipeCatalog.filter(recipe => recipe.region === 'telangana' && ['vegetarian', 'vegan'].includes(recipe.diet)).length
+  await expect(page.locator('.result-count')).toHaveText(`${vegetarianCount} ${vegetarianCount === 1 ? 'recipe' : 'recipes'}`)
+  await page.getByRole('combobox', { name: 'Filter by region' }).selectOption('all')
+  await page.getByRole('combobox', { name: 'Filter by diet' }).selectOption('all')
   await page.getByRole('searchbox').fill('gutti vankaya')
+  await expect(page.locator('.recipe-row')).toHaveCount(1)
+  await page.getByRole('searchbox').fill('avakaya mango pickle')
   await expect(page.locator('.recipe-row')).toHaveCount(0)
   await page.getByRole('searchbox').fill('చికెన్')
   await expect(page.locator('.recipe-row').first()).toBeVisible()

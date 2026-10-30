@@ -1,13 +1,14 @@
 # Recipe sources and editorial method
 
-Inspected 2026-10-30. These are source-adapted cooking plans written independently for Vantagallu. No publisher prose, photographs, videos, nutrition panels or scraped instruction text is bundled. Ingredient facts are stored in `src/content/source-facts.ts`; independently written methods are in `starter-methods.ts` and the three core records in `src/data/recipes.ts`. The original publishers retain their works; the app links directly to the specific recipe pages.
+Inspected 2026-10-30. These are source-adapted cooking plans written independently for Vantagallu. No publisher prose, photographs, videos, nutrition panels or scraped instruction text is bundled. Ingredient facts are stored in `src/content/source-facts.ts`; independently written methods are in `starter-methods.ts` the three core records in `src/data/recipes.ts`, and eight mainstream additions in `src/content/mainstream.ts`. The original publishers retain their works; the app links directly to the specific recipe pages.
 
-All 64 records have `reviewStatus: needs-kitchen-test`. The source pages were checked for their actual ingredient list and method; this does not mean the publisher approved these adaptations or that Vantagallu cooked them. The app must show the publisher, selected method and status before a session starts. Do not call these “official”, “chef-approved” or “kitchen-tested”.
+All 72 records have `reviewStatus: needs-kitchen-test`. The source pages were checked for their actual ingredient list and method; this does not mean the publisher approved these adaptations or that Vantagallu cooked them. The app must show the publisher, selected method and status before a session starts. Do not call these “official”, “chef-approved” or “kitchen-tested”.
 
 ## Sources used
 
-- [Vismai Food recipe index](https://vismaifood.com/en/recipes): primary publisher for 61 records. Attribution is to Vismai Food; no unverified individual-chef byline is invented.
-- [Dassana’s Veg Recipes](https://www.vegrecipesofindia.com/): three primary recipes below have the verified byline Dassana Amit.
+- [Vismai Food recipe index](https://vismaifood.com/en/recipes): primary publisher for 63 records. Attribution is to Vismai Food; no unverified individual-chef byline is invented.
+- [Dassana’s Veg Recipes](https://www.vegrecipesofindia.com/): eight primary recipes below have the verified byline Dassana Amit.
+- [Swasthi’s Recipes](https://www.indianhealthyrecipes.com/): the new Chicken 65 plan follows the specifically linked recipe’s untempered Chennai-style option, with verified byline Swasthi Shreekanth.
 - Vahrehvah was investigated as a future author-method source, but the relevant recipe page could not be reliably accessed in this run. No current recipe is falsely attributed to Vahchef or Food on Farm.
 
 ## Interpretation rules
@@ -60,6 +61,16 @@ All 64 records have `reviewStatus: needs-kitchen-test`. The source pages were ch
 - [FoodSafety.gov four steps](https://www.foodsafety.gov/keep-food-safe/4-steps-to-food-safety): prevent cross-contamination, refrigerate within two hours (one hour above 32°C), refrigerator at 4°C or colder, safe thawing.
 - [FoodSafety.gov cold storage chart](https://www.foodsafety.gov/food-safety-charts/cold-food-storage-charts): fresh meat and cooked-food storage context. No month-long chutney or ambient sweet-preservation promise is imported.
 - [ICMR task-force assessment in Indian Journal of Medical Research](https://ijmr.org.in/assessment-of-effects-on-health-due-to-consumption-of-bitter-bottle-gourd-lagenaria-siceraria-juice/): bitter bottle gourd must be discarded. No proposed “fix” by cooking or masking bitterness.
+
+## Mainstream additions
+
+Eight named targets were promoted to cookable plans: plain fermented dosa, coconut and onion chutneys, medu vada, gutti vankaya, Hyderabadi chicken dum biryani, vegetable dum biryani and Chicken 65. The coverage manifest remains 300, with 72 available and 228 planned. Existing 64 recipe versions and semantics are unchanged.
+
+- Plain dosa and medu vada use explicitly estimated two-piece portions and include soaking/fermentation in prep.
+- Gutti vankaya uses the source’s peanut/coconut stuffed-brinjal method. Cooker liquid and pressure timings require appliance-specific checks.
+- Hyderabadi chicken dum biryani rejects the source’s advice to marinate raw chicken outside refrigeration. Small source spoons are interpreted as teaspoons, its big rice-water spoon as one tablespoon; this is an editorial assumption. Add actual 74°C thermometer verification, rather than treating the short source dum schedule as safe by itself.
+- Vegetable dum biryani is the source’s hariyali variant. Food colour and kapok buds are omitted; ambiguous repeated whole nutmeg becomes one optional small pinch ground nutmeg. Salt in drained rice water is to taste. These are visible editorial adaptations, not a claimed exact reproduction.
+- Chicken 65 uses Swasthi’s untempered Chennai-style variant. Despite the URL saying no egg, the current source explicitly offers one egg white or 2½ tablespoons extra yogurt. The chosen plan contains egg white, with egg and milk allergens; its listed swap changes only that coating ingredient.
 
 ## Specific recipe links
 
@@ -129,3 +140,11 @@ All 64 records have `reviewStatus: needs-kitchen-test`. The source pages were ch
 | Andhra murukulu | Vismai Food | [Recipe page](https://vismaifood.com/en/rice-flour-murukku-kaarappusa-chakli-jantikas-chakrams-how-make-andhra-style-murukulu) |
 | Tomato pappu | Vismai Food | [Recipe page](https://vismaifood.com/en/tomato-dal-tomato-pappu-wedding-style-tomato-pappu-andhra-tomato-dal) |
 | Mudda pappu | Vismai Food | [Recipe page](https://vismaifood.com/en/perfect-muddapappu-andhrastyle-mudda-pappu-recipe-how-make-andhra-style-plain-dal) |
+| Plain fermented dosa | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/dosa-recipe-dosa-batter-recipe/) |
+| Coconut chutney | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/coconut-chutney-recipe-coconut-chutney/) |
+| Onion chutney | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/onion-chutney-recipe/) |
+| Medu vada | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/medu-vada-recipe-medu-vada/) |
+| Gutti vankaya kura | Dassana’s Veg Recipes / Dassana Amit | [Recipe page](https://www.vegrecipesofindia.com/gutti-vankaya-kura-recipe/) |
+| Hyderabadi chicken dum biryani | Vismai Food | [Recipe page](https://vismaifood.com/en/hyderabadi-chicken-dum-biryani-how-to-make-hyderabadi-chicken-dum-biryani) |
+| Vegetable dum biryani | Vismai Food | [Recipe page](https://vismaifood.com/en/haryali-veg-dum-biryani-vegetable-dum-biryani-hyderabadi-biryani) |
+| Chicken 65 | Swasthi’s Recipes / Swasthi Shreekanth | [Recipe page](https://www.indianhealthyrecipes.com/chicken-65-recipe-no-egg-restaurant-style-chicken-recipes/) |

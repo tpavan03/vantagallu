@@ -1,5 +1,5 @@
-import { languages } from './types'
-import type { CookingCommand, CookingSession, CookingTimer, Language, Recipe, RecipeIngredient, RecipeStep } from './types'
+import { languages } from './types.ts'
+import type { CookingCommand, CookingSession, CookingTimer, Language, Recipe, RecipeIngredient, RecipeStep } from './types.ts'
 
 export class DomainError extends Error {
   constructor(message: string) { super(message); this.name = 'DomainError' }

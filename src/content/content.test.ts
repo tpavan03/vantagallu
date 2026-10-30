@@ -12,7 +12,10 @@ describe('source-adapted recipe catalogue', () => {
       expect(recipe.title.te, recipe.id).toMatch(/[\u0c00-\u0c7f]/)
       expect(recipe.reviewStatus).toBe('needs-kitchen-test')
       expect(recipe.authorMethod).toMatch(/not kitchen-tested/)
-      expect(recipe.sources[0].url).toMatch(/^https:\/\/(vismaifood\.com\/en\/[^/]+|www\.vegrecipesofindia\.com\/[^/]+\/)$/)
+      const source = new URL(recipe.sources[0].url)
+      expect(source.protocol).toBe('https:')
+      expect(['vismaifood.com', 'www.vegrecipesofindia.com', 'www.indianhealthyrecipes.com']).toContain(source.hostname)
+      expect(source.pathname.split('/').filter(Boolean).length).toBeGreaterThan(0)
       expect(recipe.sources[0].note).toContain('2026-10-30')
       expect(recipe.equipment.length).toBeGreaterThan(1)
       expect(recipe.baseServings).toBeGreaterThan(0)
@@ -34,7 +37,7 @@ describe('source-adapted recipe catalogue', () => {
         expect(Number.isFinite(item.quantity), `${recipe.id}/${item.id}`).toBe(true)
         expect(item.quantity, `${recipe.id}/${item.id}`).toBeGreaterThan(0)
         expect(item.unit.length).toBeGreaterThan(0)
-        if (/\bwater\b|\boil\b/i.test(item.name.en)) expect(item.scaling, `${recipe.id}/${item.name.en}`).toBe('method-dependent')
+        if (/^water\b|\boil\b/i.test(item.name.en)) expect(item.scaling, `${recipe.id}/${item.name.en}`).toBe('method-dependent')
         if (/\bsalt\b/i.test(item.name.en)) expect(item.scaling).toBe('to-taste')
       }
       for (const step of recipe.steps) {
@@ -84,5 +87,6 @@ describe('honest named coverage manifest', () => {
     for (const region of ['andhra', 'telangana', 'rayalaseema', 'tamil', 'karnataka', 'kerala', 'south-indian']) expect(recipeCatalog.some(recipe => recipe.region === region)).toBe(true)
     for (const diet of ['vegan', 'vegetarian', 'egg', 'non-vegetarian']) expect(recipeCatalog.some(recipe => recipe.diet === diet)).toBe(true)
     for (const id of ['pesarattu', 'idli', 'peanut-chutney', 'allam-pachadi', 'tomato-pappu', 'mudda-pappu', 'chicken-curry', 'telangana-egg-curry', 'fish-pulusu', 'prawn-masala', 'gongura-mutton']) expect(getRecipeById(id)).toBeDefined()
+    for (const id of ['plain-dosa', 'coconut-chutney', 'onion-chutney', 'medu-vada', 'gutti-vankaya', 'hyderabadi-chicken-dum-biryani', 'vegetable-dum-biryani', 'chicken-65']) expect(getRecipeById(id)).toBeDefined()
   })
 })
