@@ -4,6 +4,7 @@ import { config as loadEnv } from 'dotenv'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { recipeCatalog } from '../../src/data/recipes.ts'
+import { recipeCoverageManifest } from '../../src/data/coverage.ts'
 import { createCookingSession, applyCookingCommand } from '../../src/domain/session.ts'
 import { readConfig } from '../config.ts'
 import { SupabaseRepository } from '../repository.ts'
@@ -34,10 +35,14 @@ function userRequest(path: string, token: string, method = 'GET', body?: unknown
 }
 
 try {
-  assert.equal(recipeCatalog.length, 64, 'Seed only the reviewed available catalog, not planned entries.')
+  const catalogIds = recipeCatalog.map(recipe => recipe.id)
+  const availableIds = recipeCoverageManifest.filter(entry => entry.status === 'available').map(entry => entry.recipeId)
+  assert.equal(new Set(catalogIds).size, catalogIds.length, 'Canonical recipe IDs must be unique.')
+  assert.equal(new Set(availableIds).size, availableIds.length, 'Available manifest IDs must be unique.')
+  assert.deepEqual([...catalogIds].sort(), [...availableIds].sort(), 'Seed only the available source-adapted catalogue, never planned entries.')
   const seed = await fetch(`${config.supabaseUrl}/rest/v1/vantagallu_recipes?on_conflict=id`, { method: 'POST', headers: { ...adminHeaders, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(recipeCatalog.map(recipe => ({ id: recipe.id, version: recipe.version, data: recipe }))) })
   if (!seed.ok) throw new Error(`Catalog seeding failed (${seed.status}); check schema/version immutability.`)
-  results.push('64 available attributed recipe records seeded')
+  results.push(`${recipeCatalog.length} available attributed recipe records seeded`)
   const a = await authUser(), b = await authUser(), repository = new SupabaseRepository(config), recipe = recipeCatalog[0]
   const state = createCookingSession(recipe, { id: randomUUID(), ownerId: a.id }), stateB = createCookingSession(recipe, { id: randomUUID(), ownerId: b.id })
   createdSessions.push(state.id, stateB.id)

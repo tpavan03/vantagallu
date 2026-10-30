@@ -2,6 +2,8 @@
 
 A personal South Indian cooking companion with a living cooking board, four-language Gemini Live voice, DeepSeek chat and durable cooking sessions. The app adapts to confirmed changes instead of forcing the cook to restart a recipe.
 
+COOKer is the cooking agent inside Vantagallu. It respects valid household and author variations, checks proposed changes, and explains practical corrections when a reported action could spoil the dish or create a safety problem. It relies on what the cook reports; it cannot see, taste or measure the food.
+
 ## Personal deployment
 
 - Application: https://vantagallu.vercel.app
@@ -15,6 +17,8 @@ Google sign-in and the exact production redirect are configured. AI/cloud access
 ## Use on a phone
 
 Open the application in Android Chrome or iPhone Safari, sign in, choose a recipe and tap Talk. Allow microphone access when requested. Use the browser’s Install app or Add to Home Screen action to keep Vantagallu on the home screen.
+
+Open voice view expands COOKer’s live blob, transcript and current cooking step. Back to recipe keeps voice active; Pause voice stops the microphone while retaining the cooking session.
 
 The web app supports foreground voice. Pausing voice closes capture and the connection while retaining the cooking session. Background listening and reliable native alarms require the later native-device integration; an elapsed web timer does not establish food doneness.
 

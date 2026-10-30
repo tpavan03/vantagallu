@@ -47,6 +47,26 @@ test('source method is visible before cooking and Escape restores focus', async 
   await expect(card).toBeFocused()
 })
 
+test('COOKer voice view shows the current step and returns to the same cooking session', async ({ page }) => {
+  await startPesarattu(page)
+  const before = await guest(page)
+  const opener = page.getByRole('button', { name: /Open voice view/ })
+  await opener.click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('img', { name: 'COOKer' })).toBeVisible()
+  await expect(dialog.locator('.voice-recipe-context')).toContainText('Pesarattu')
+  await expect(dialog.locator('.voice-recipe-context')).toContainText('Rinse moong and rice')
+  expect((await dialog.locator('.cooker-orb').boundingBox())!.width).toBeGreaterThan(150)
+  await expect(dialog.getByRole('button', { name: 'Sign in to talk', exact: true })).toBeVisible()
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  await dialog.getByRole('button', { name: 'Back to recipe' }).click()
+  await expect(dialog).not.toBeVisible()
+  await expect(opener).toBeFocused()
+  const after = await guest(page)
+  expect(after.currentId).toBe(before.currentId)
+  expect(after.sessions[0]).toEqual(before.sessions[0])
+})
+
 test('confirmed quantities survive resizing, reload and offline hand cooking', async ({ page, context }) => {
   await startPesarattu(page)
   await page.locator('.ingredient-item').filter({ hasText: 'Whole green moong' }).click()

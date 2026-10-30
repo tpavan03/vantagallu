@@ -148,3 +148,7 @@ Eight named targets were promoted to cookable plans: plain fermented dosa, cocon
 | Hyderabadi chicken dum biryani | Vismai Food | [Recipe page](https://vismaifood.com/en/hyderabadi-chicken-dum-biryani-how-to-make-hyderabadi-chicken-dum-biryani) |
 | Vegetable dum biryani | Vismai Food | [Recipe page](https://vismaifood.com/en/haryali-veg-dum-biryani-vegetable-dum-biryani-hyderabadi-biryani) |
 | Chicken 65 | Swasthi’s Recipes / Swasthi Shreekanth | [Recipe page](https://www.indianhealthyrecipes.com/chicken-65-recipe-no-egg-restaurant-style-chicken-recipes/) |
+
+## Appliance correction guidance
+
+The shared agent prompt requires manufacturer-specific pressure-release instructions rather than treating silence or a loose lid as proof of depressurization. Its conservative handling of an unknown cooker is grounded in [Hawkins’ important safeguards](https://www.hawkinscookers.com/1.3.pc_safeguards.html) and the manufacturer’s [operating tips and model-specific exceptions](https://www.hawkinscookers.com/1.4.5.pc_tips.html), checked on 30 October 2026. These references do not authorize applying one cooker model’s release method to another.

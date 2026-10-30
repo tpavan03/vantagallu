@@ -9,6 +9,10 @@ colors:
   line: "#DCE3D8"
   accent: "#CC3E2C"
   ingredient: "#E9EFDF"
+  voiceMist: "#DCEBD8"
+  voiceWarm: "#F3DFB8"
+  voiceMist: "#DCEBD8"
+  voiceWarm: "#F3DFB8"
 typography:
   display:
     fontFamily: Space Grotesk
@@ -43,19 +47,23 @@ components:
 
 ## Overview
 
-A personal Telugu-first South Indian cooking companion. The owner approved the standalone design study before implementation. The main experience is a single current cooking instruction, an original iron-pan illustration, a ready/added ingredient rail and anchored Talk, Type and Next controls. Preserve the approved open countertop composition: no dashboard sidebar, promotional hero, generic recipe-grid landing or animated AI orb.
+A personal Telugu-first South Indian cooking companion. The owner approved the standalone design study before implementation, then explicitly requested a named COOKer agent with a distinctive voice blob. The main experience is a single current cooking instruction, an original iron-pan illustration, a ready/added ingredient rail and anchored Talk, Type and Next controls. Preserve the approved open countertop composition: no dashboard sidebar, promotional hero or generic recipe-grid landing. COOKer is the conversational companion inside Vantagallu.
 
 Recipes are a starting method. The selected author/source stays visible; confirmed cooking facts and valid changes belong to the same saved session across voice, text and later visits. Frontend components display actual runtime state. Never fabricate an AI answer, microphone activity, cloud save or successful provider connection.
 
 ## Colors
 
+Voice-specific colors map from voiceMist #DCEBD8 and voiceWarm #F3DFB8 to the runtime --cooker-mist and --cooker-warm variables in src/styles/kitchen.css. The existing leaf, iron and paper tokens supply the remaining COOKer colors.
+
 src/styles/kitchen.css owns semantic runtime colors: rice background #F3F6F2, warm paper #FCFDF9, dark iron #182725, leaf green #196343, restrained chilli #CC3E2C. Muted text is #56654F with readable contrast. Red marks errors/heat; added ingredients also show explicit text and a check, not color alone. Keep large surfaces quiet and let the stateful cooking illustration carry personality.
 
 ## Typography
 
-Self-hosted Space Grotesk supplies dish names, current instructions and dialog headings. Manrope handles reading and controls. Both are bundled under public/fonts with their licenses. Native script fallbacks render Telugu, Kannada and Hindi. Instructions follow the selected session language with the domain's English fallback. The language selector must not reset the cooking session.
+Self-hosted Space Grotesk supplies dish names, current instructions and dialog headings. Manrope handles reading and controls. COOKer's wordmark deliberately pairs bold, tightly tracked Space Grotesk COOK with a lighter italic Manrope er. Both are bundled under public/fonts with their licenses. Native script fallbacks render Telugu, Kannada and Hindi. Instructions follow the selected session language with the domain's English fallback. The language selector must not reset the cooking session.
 
 ## Layout
+
+The compact COOKer companion appears below dish context, before the cooking surface. Open voice view uses the shared dialog with a large organic blob, the real connection state, live transcript and current recipe step. Starting voice opens that view in the same user gesture. Back to recipe closes the view while preserving the live session; Pause voice explicitly stops microphone capture. The pause action stays available in every dialog while voice is active.
 
 Desktop uses a quiet wordmark/navigation row, dish context, one open cooking surface and a narrow ingredient rail. The current instruction remains the strongest text. Phones keep the same hierarchy, move ingredients into an explicit horizontal rail with a visible scrollbar, and anchor Talk/Type/Next above the safe bottom area. Normal page scrolling belongs to the document; dialogs scroll independently.
 
@@ -63,7 +71,7 @@ Recipe search, regional/diet filters, source preview, saved sessions, conversati
 
 ## Elevation & Depth
 
-Minimal borders and elevation. The illustrated vessel has its own grounded shadow; the interface does not need layered dashboard cards. The dialog alone uses a strong overlay. No ambient orb or false activity. Steam is decorative and stops with reduced motion.
+Minimal borders and elevation. The illustrated vessel has its own grounded shadow; the interface does not need layered dashboard cards. The dialog alone uses a strong overlay. The user-requested COOKer voice blob uses mist green and warm cream layers around an original cooking-pot symbol. It morphs only during actual connecting, listening, speaking or reconnecting states; idle and errors stay still. Motion signifies connection state, never measured audio volume. All blob motion and decorative steam stop with reduced motion, while visible state labels remain.
 
 ## Shapes
 
@@ -75,7 +83,9 @@ KitchenApp.tsx is the UI boundary. It consumes shared Recipe/CookingSession/Voic
 
 CookingPan.tsx owns original cookware and ingredient drawings. It illustrates confirmed ingredient names and selected cookware; it does not imply sensor readings or assume that a cooker lid is closed. Quantity changes preserve already-added ingredient amounts. The UI does not scale cooking time or invent pressure-cooking instructions.
 
-Native selects and dialog supply platform keyboard/focus behavior. One shared dialog hosts source previews and edit forms; callback failures keep entered text/context visible. Actual provider pending state disables duplicate chat requests. Local/offline/cloud saving labels are distinct. Voice status represents actual connecting/listening/speaking/reconnecting/error state, and can always be stopped while connected.
+Cooker.tsx owns the agent wordmark, cooking-pot icon and voice-state visual. It consumes the real VoiceStatus plus availability/error/transcript props; it never starts hardware, invokes a provider, invents thinking status or simulates microphone levels. Text-chat pending feedback remains separate. Its runtime color tokens --cooker-mist and --cooker-warm map to colors.voiceMist and colors.voiceWarm above.
+
+Native selects and dialog supply platform keyboard/focus behavior. One shared dialog hosts source previews and edit forms; callback failures keep entered text/context visible. Actual provider pending state disables duplicate chat requests. Local/offline/cloud saving labels are distinct. Voice status represents actual connecting/listening/speaking/reconnecting/error state, and can always be stopped while connected, including a Pause voice action inside any open dialog. Guest conversation supplies an in-dialog sign-in path and preserves the message draft.
 
 Timer displays derive from absolute saved deadlines. Expiry requests a food check, not a claim of doneness. Timers are not silently paused when a voice connection ends. Account sign-in and source links are real actions supplied by the runtime.
 

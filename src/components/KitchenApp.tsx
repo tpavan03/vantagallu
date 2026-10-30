@@ -12,6 +12,7 @@ import type {
   VoiceStatus,
 } from "../domain/types";
 import KitchenTextarea from "./KitchenTextarea";
+import Cooker, { CookerIcon } from "./Cooker";
 import { sessionIngredients, ingredientAmount } from "../domain/session";
 import { CookingPan, IngredientDrawing } from "./CookingPan";
 import "../styles/kitchen.css";
@@ -78,14 +79,16 @@ const dietLabels: Record<string, string> = {
 };
 
 function recipeTime(recipe: Recipe) {
-  if (recipe.prepMinutes >= 90) return `${recipe.cookMinutes} min cooking · prep ahead`;
+  if (recipe.prepMinutes >= 90)
+    return `${recipe.cookMinutes} min cooking · prep ahead`;
   const total = recipe.prepMinutes + recipe.cookMinutes;
   if (total < 60) return `${total} min`;
   return `${Math.floor(total / 60)} hr${total % 60 ? ` ${total % 60} min` : ""}`;
 }
 
 function recipeMethodLabel(recipe: Recipe) {
-  const publisher = recipe.sources[0]?.author || recipe.sources[0]?.name || "Home-style method";
+  const publisher =
+    recipe.sources[0]?.author || recipe.sources[0]?.name || "Home-style method";
   const method = recipe.authorMethod.split("—")[1]?.split(";")[0]?.trim();
   return method && !method.startsWith("source-adapted")
     ? `${publisher} · ${method}`
@@ -351,7 +354,9 @@ export default function KitchenApp(props: KitchenAppProps) {
     chatPending,
   } = props;
   const language = session?.language || props.language || "en";
-  const recipe = session?.recipeSnapshot || recipes.find((item) => item.id === session?.recipeId);
+  const recipe =
+    session?.recipeSnapshot ||
+    recipes.find((item) => item.id === session?.recipeId);
   const ingredients =
     recipe && session ? sessionIngredients(recipe, session) : [];
   const stepIndex = session
@@ -363,6 +368,7 @@ export default function KitchenApp(props: KitchenAppProps) {
     | "recipes"
     | "sessions"
     | "chat"
+    | "voice"
     | "adapt"
     | "servings"
     | "cookware"
@@ -433,8 +439,13 @@ export default function KitchenApp(props: KitchenAppProps) {
     }
   }
   async function toggleVoice() {
-    if (!props.user) { setModal("account"); return; }
+    if (!props.user) {
+      setModal("account");
+      return;
+    }
     try {
+      // Keep the actual start inside this click gesture for microphone permissions.
+      if (!voiceActive) setModal("voice");
       await props.onVoiceToggle();
     } catch (error) {
       setActionError(
@@ -453,19 +464,30 @@ export default function KitchenApp(props: KitchenAppProps) {
     setModal(null);
   }
   function validateForm(event: FormEvent<HTMLFormElement>) {
-    for (const field of event.currentTarget.querySelectorAll('[aria-invalid="true"]')) {
-      field.removeAttribute('aria-invalid');
-      const ids = (field.getAttribute('aria-describedby') || '').split(' ').filter(id => id && id !== 'kitchen-form-error');
-      if (ids.length) field.setAttribute('aria-describedby', ids.join(' '));
-      else field.removeAttribute('aria-describedby');
+    for (const field of event.currentTarget.querySelectorAll(
+      '[aria-invalid="true"]',
+    )) {
+      field.removeAttribute("aria-invalid");
+      const ids = (field.getAttribute("aria-describedby") || "")
+        .split(" ")
+        .filter((id) => id && id !== "kitchen-form-error");
+      if (ids.length) field.setAttribute("aria-describedby", ids.join(" "));
+      else field.removeAttribute("aria-describedby");
     }
-    const invalid = event.currentTarget.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(':invalid');
+    const invalid = event.currentTarget.querySelector<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >(":invalid");
     if (invalid) {
       event.preventDefault();
       event.stopPropagation();
-      invalid.setAttribute('aria-invalid', 'true');
-      invalid.setAttribute('aria-describedby', `${invalid.getAttribute('aria-describedby') || ''} kitchen-form-error`.trim());
-      setActionError(invalid.validationMessage || 'Check this field before continuing.');
+      invalid.setAttribute("aria-invalid", "true");
+      invalid.setAttribute(
+        "aria-describedby",
+        `${invalid.getAttribute("aria-describedby") || ""} kitchen-form-error`.trim(),
+      );
+      setActionError(
+        invalid.validationMessage || "Check this field before continuing.",
+      );
       invalid.focus();
     } else setActionError(null);
   }
@@ -519,9 +541,7 @@ export default function KitchenApp(props: KitchenAppProps) {
         <div className="recipe-meta">
           <span>{regions[selectedRecipe.region]}</span>
           <span>{dietLabels[selectedRecipe.diet]}</span>
-          <span>
-            {recipeTime(selectedRecipe)}
-          </span>
+          <span>{recipeTime(selectedRecipe)}</span>
         </div>
         <h3>The method you’re starting with</h3>
         <p>{selectedRecipe.authorMethod}</p>
@@ -617,7 +637,9 @@ export default function KitchenApp(props: KitchenAppProps) {
             .slice()
             .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
             .map((item) => {
-              const itemRecipe = item.recipeSnapshot || recipes.find((r) => r.id === item.recipeId);
+              const itemRecipe =
+                item.recipeSnapshot ||
+                recipes.find((r) => r.id === item.recipeId);
               return (
                 <article className="saved-session" key={item.id}>
                   <div>
@@ -678,7 +700,7 @@ export default function KitchenApp(props: KitchenAppProps) {
     );
   }
   if (modal === "chat") {
-    dialogTitle = "Same cooking. Keep talking.";
+    dialogTitle = "Talk with COOKer.";
     dialogDescription = "Voice and typing share this cooking session.";
     dialogContent = (
       <>
@@ -710,7 +732,7 @@ export default function KitchenApp(props: KitchenAppProps) {
                 key={item.id}
               >
                 <span className="message-meta">
-                  {item.role === "user" ? "You" : "Vantagallu"} ·{" "}
+                  {item.role === "user" ? "You" : "COOKer"} ·{" "}
                   {item.channel === "voice" ? "Voice" : "Chat"}
                 </span>
                 {item.text}
@@ -727,7 +749,7 @@ export default function KitchenApp(props: KitchenAppProps) {
           )}
           {props.streamingReply ? (
             <div className="bubble streaming-message">
-              <span className="message-meta">Vantagallu · replying…</span>
+              <span className="message-meta">COOKer · replying…</span>
               {props.streamingReply}
             </div>
           ) : chatPending ? (
@@ -766,6 +788,7 @@ export default function KitchenApp(props: KitchenAppProps) {
           <button
             disabled={
               !message.trim() ||
+              !props.user ||
               chatPending ||
               busy ||
               !online ||
@@ -776,7 +799,18 @@ export default function KitchenApp(props: KitchenAppProps) {
             {chatPending ? "Thinking…" : "Send"}
           </button>
         </form>
-        {!online ? (
+        {!props.user ? (
+          <div className="chat-auth-entry">
+            <p>Sign in to chat with COOKer. Your draft will stay here.</p>
+            <button
+              className="pill"
+              type="button"
+              onClick={() => setModal("account")}
+            >
+              Sign in to chat
+            </button>
+          </div>
+        ) : !online ? (
           <p className="field-help">
             You’re offline. Your recipe and confirmed steps are still available.
             Sending messages needs a connection.
@@ -979,6 +1013,28 @@ export default function KitchenApp(props: KitchenAppProps) {
           Update cookware →
         </button>
       </form>
+    );
+  }
+  if (modal === "voice") {
+    dialogTitle = "Your kitchen. A little company.";
+    dialogDescription = "Live voice with COOKer";
+    dialogContent = (
+      <div className="voice-view">
+        <Cooker expanded status={voiceStatus} error={voiceError} transcript={props.liveTranscript}
+          signedIn={Boolean(user)} available={props.voiceAvailable !== false} online={online} />
+        {recipe && <div className="voice-recipe-context">
+          <span>Cooking now · {localize(recipe.title, language)}</span>
+          <p>{step ? localize(step.instruction, language) : "Your confirmed cooking session is kept."}</p>
+        </div>}
+        <div className="voice-view-actions">
+          {!voiceActive && <button className="dialog-primary" disabled={!online || (user ? props.voiceAvailable === false : props.authAvailable === false)} onClick={() => void toggleVoice()}>
+            <CookerIcon />{!user ? "Sign in to talk" : voiceStatus === "error" ? "Retry voice" : "Talk to COOKer"}
+          </button>}
+          <button className="dialog-primary secondary" onClick={closeModal}>Back to recipe</button>
+          <button className="voice-type-link" onClick={() => setModal("chat")}>Prefer typing? Open conversation</button>
+        </div>
+        <p className="field-help">{voiceActive ? "Closing this view keeps voice active. Pause voice to stop the microphone." : "Voice starts only when you choose Talk. Your cooking stays in the same session."}</p>
+      </div>
     );
   }
   if (modal === "account") {
@@ -1211,6 +1267,11 @@ export default function KitchenApp(props: KitchenAppProps) {
                 </button>
               </div>
             </section>
+            <div className="cooker-entry">
+              <Cooker status={voiceStatus} error={voiceError} transcript={props.liveTranscript}
+                signedIn={Boolean(user)} available={props.voiceAvailable !== false} online={online} />
+              <button className="cooker-open-view" onClick={() => setModal("voice")}><CookerIcon />Open voice view<span aria-hidden="true">↗</span></button>
+            </div>
             {session.status === "paused" && (
               <div className="paused-banner">
                 <p>
@@ -1442,38 +1503,6 @@ export default function KitchenApp(props: KitchenAppProps) {
                 </p>
               </aside>
             </section>
-            {(voiceActive || voiceError || voiceStatus === "error") && (
-              <div
-                className={`voice-bar show ${voiceStatus === "error" ? "voice-error" : ""}`}
-                role="status"
-              >
-                {voiceActive && (
-                  <span className="voice-bars" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                )}
-                <div>
-                  <strong>{voiceLabels[voiceStatus]}</strong>
-                  <p>
-                    {voiceError ||
-                      (voiceStatus === "connecting"
-                        ? "Connecting to the same cooking session…"
-                        : voiceStatus === "reconnecting"
-                          ? "Reconnecting. Your confirmed cooking state is kept."
-                          : voiceStatus === "listening"
-                            ? "You can interrupt or pause whenever you need."
-                            : "Your voice conversation stays with this session.")}
-                  </p>
-                  {props.liveTranscript && (
-                    <p className="live-transcript">
-                      Heard so far: {props.liveTranscript}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
             {!finished && (
               <div className="adapt-link">
                 <button onClick={() => setModal("chat")}>
@@ -1489,13 +1518,21 @@ export default function KitchenApp(props: KitchenAppProps) {
                     onClick={() => void toggleVoice()}
                     disabled={
                       !voiceActive &&
-                      (!online || (props.user ? props.voiceAvailable === false : props.authAvailable === false) || busy)
+                      (!online ||
+                        (props.user
+                          ? props.voiceAvailable === false
+                          : props.authAvailable === false) ||
+                        busy)
                     }
                     aria-pressed={voiceActive}
                   >
-                    <Icon name="voice" />
+                    <CookerIcon />
                     <span>
-                      {voiceActive ? "Pause voice" : !props.user ? "Sign in to talk" : voiceLabels[voiceStatus]}
+                      {voiceActive
+                        ? "Pause voice"
+                        : !props.user
+                          ? "Sign in to talk"
+                          : voiceLabels[voiceStatus]}
                     </span>
                   </button>
                   <button
@@ -1529,18 +1566,18 @@ export default function KitchenApp(props: KitchenAppProps) {
                   ? "Offline · confirmed steps stay on this device"
                   : !props.user
                     ? "Sign in for voice and chat · your steps are saved on this device"
-                  : props.voiceAvailable === false
-                    ? "Voice isn’t connected yet · recipe controls are available"
-                    : voiceActive
-                      ? "Voice is active · pause to stop the microphone"
-                      : "Your recipe. Your pace. Your cooking, kept together."}
+                    : props.voiceAvailable === false
+                      ? "Voice isn’t connected yet · recipe controls are available"
+                      : voiceActive
+                        ? "Voice is active · pause to stop the microphone"
+                        : "Your recipe. Your pace. Your cooking, kept together."}
               </p>
             </div>
           </>
         )}
         <dialog
           ref={dialog}
-          className={modal === "recipes" ? "library-dialog" : ""}
+          className={modal === "recipes" ? "library-dialog" : modal === "voice" ? "voice-dialog" : ""}
           aria-labelledby="kitchen-dialog-title"
           onCancel={closeModal}
           onClose={() => {
@@ -1564,13 +1601,24 @@ export default function KitchenApp(props: KitchenAppProps) {
               <h2 id="kitchen-dialog-title">{dialogTitle}</h2>
               {dialogDescription && <p>{dialogDescription}</p>}
             </div>
-            <button
-              className="close"
-              onClick={closeModal}
-              aria-label="Close dialog"
-            >
-              <Icon name="close" />
-            </button>
+            <div className="dialog-head-actions">
+              {voiceActive && (
+                <button
+                  className="dialog-pause-voice"
+                  onClick={() => void toggleVoice()}
+                >
+                  <CookerIcon />
+                  <span>Pause voice</span>
+                </button>
+              )}
+              <button
+                className="close"
+                onClick={closeModal}
+                aria-label="Close dialog"
+              >
+                <Icon name="close" />
+              </button>
+            </div>
           </div>
           <div className="dialog-body">
             {dialogContent}

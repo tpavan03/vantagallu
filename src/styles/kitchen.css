@@ -8,6 +8,8 @@
   --line: #dce3d8;
   --chilli: #cc3e2c;
   --gold: #d9a94f;
+  --cooker-mist: #dcebd8;
+  --cooker-warm: #f3dfb8;
 }
 * {
   box-sizing: border-box;
@@ -1206,6 +1208,247 @@ dialog::backdrop {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* COOKer is a real-state voice companion, never an audio-level simulation. */
+.cooker-companion {
+  display: flex;
+  align-items: center;
+  gap: 23px;
+  padding: 18px 22px;
+  margin: 12px 0 0;
+  border-radius: 20px;
+  background: linear-gradient(115deg, var(--paper), var(--rice));
+  color: var(--iron);
+}
+.cooker-orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 88px;
+  width: 88px;
+  height: 88px;
+  isolation: isolate;
+}
+.cooker-orb-shell,
+.cooker-orb-inner {
+  position: absolute;
+  inset: 1px;
+  border-radius: 46% 54% 61% 39% / 43% 41% 59% 57%;
+  background: linear-gradient(135deg, var(--cooker-mist) 10%, var(--leaf) 100%);
+}
+.cooker-orb-inner {
+  inset: 10px;
+  border-radius: 57% 43% 43% 57% / 58% 58% 42% 42%;
+  background: radial-gradient(
+    circle at 29% 26%,
+    var(--paper),
+    var(--cooker-warm) 60%,
+    var(--cooker-mist)
+  );
+  transform: rotate(-28deg);
+}
+.cooker-orb > svg {
+  position: relative;
+  width: 43px;
+  height: 43px;
+  color: var(--iron);
+}
+.cooker-copy {
+  flex: 1;
+  min-width: 0;
+}
+.cooker-identity {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 12px;
+  row-gap: 3px;
+  margin-bottom: 7px;
+}
+.cooker-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--iron);
+  line-height: 1;
+  white-space: nowrap;
+}
+.cooker-cook {
+  font-family: Counter, sans-serif;
+  font-weight: 700;
+  font-size: 25px;
+  letter-spacing: -1.6px;
+}
+.cooker-er {
+  font-family: Kitchen, sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -1.8px;
+  margin-left: 1px;
+}
+.cooker-identity > span:last-child {
+  color: var(--muted);
+  font-size: 10px;
+}
+.cooker-state strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+.cooker-state p,
+.cooker-transcript {
+  font-size: 12px;
+  line-height: 1.7;
+  margin-top: 3px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.cooker-state .cooker-error-copy {
+  color: var(--chilli);
+}
+.cooker-transcript {
+  color: var(--iron);
+  margin-top: 7px;
+}
+.cooker-companion[data-voice-state="connecting"] .cooker-orb-shell,
+.cooker-companion[data-voice-state="reconnecting"] .cooker-orb-shell {
+  background: linear-gradient(135deg, var(--cooker-warm), var(--gold));
+  animation: cooker-connect 3s ease-in-out infinite;
+}
+.cooker-companion[data-voice-state="listening"] .cooker-orb-shell {
+  animation: cooker-shape 8s ease-in-out infinite;
+}
+.cooker-companion[data-voice-state="speaking"] .cooker-orb-shell {
+  animation: cooker-shape 4s ease-in-out infinite;
+}
+.cooker-companion[data-voice-state="speaking"] .cooker-orb-inner {
+  animation: cooker-inner 5s ease-in-out infinite;
+}
+.cooker-companion[data-voice-state="error"] .cooker-orb-shell {
+  background: linear-gradient(135deg, var(--cooker-warm), var(--chilli));
+}
+.talk-button > svg {
+  width: 27px;
+  height: 27px;
+}
+.dialog-head-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.dialog-pause-voice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  color: var(--green);
+  background: var(--rice);
+  font-size: 11px;
+  font-weight: 700;
+}
+.dialog-pause-voice svg {
+  width: 25px;
+  height: 25px;
+}
+.chat-auth-entry {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.chat-auth-entry p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.chat-auth-entry .pill {
+  background: var(--green);
+  color: var(--paper);
+}
+@keyframes cooker-shape {
+  0%,
+  100% {
+    border-radius: 46% 54% 61% 39% / 43% 41% 59% 57%;
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    border-radius: 59% 41% 38% 62% / 57% 59% 41% 43%;
+    transform: rotate(24deg) scale(1.04);
+  }
+}
+@keyframes cooker-inner {
+  0%,
+  100% {
+    transform: rotate(-28deg) scale(1);
+  }
+  50% {
+    transform: rotate(-8deg) scale(0.94);
+  }
+}
+@keyframes cooker-connect {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(35deg);
+  }
+}
+@media (max-width: 600px) {
+  .cooker-companion {
+    gap: 15px;
+    padding: 15px 7px;
+    margin-top: 10px;
+  }
+  .cooker-orb {
+    flex-basis: 72px;
+    width: 72px;
+    height: 72px;
+  }
+  .cooker-orb > svg {
+    width: 37px;
+    height: 37px;
+  }
+  .cooker-identity {
+    column-gap: 9px;
+    margin-bottom: 5px;
+  }
+  .cooker-cook {
+    font-size: 23px;
+  }
+  .cooker-er {
+    font-size: 22px;
+  }
+  .cooker-identity > span:last-child {
+    font-size: 9px;
+  }
+  .cooker-state strong {
+    font-size: 12px;
+  }
+  .cooker-state p {
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .dialog-head:has(.dialog-pause-voice) {
+    flex-wrap: wrap;
+  }
+  .dialog-head:has(.dialog-pause-voice) > div:first-child {
+    flex: 1 1 170px;
+  }
+  .dialog-head:has(.dialog-pause-voice) .dialog-head-actions {
+    margin-left: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cooker-orb-shell,
+  .cooker-orb-inner {
+    animation: none !important;
   }
 }
 
@@ -2743,4 +2986,39 @@ button:hover:disabled {
 
 .step-context {
   color: #4c6242;
+}
+
+/* One companion, compact on the board and expanded in the voice view. */
+.cooker-entry { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+.cooker-entry > .cooker-companion { flex: 1; margin: 0; }
+.cooker-open-view {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  min-height: 44px; padding: 10px 14px; border: 1px solid var(--line);
+  border-radius: 10px; color: var(--leaf); white-space: nowrap;
+}
+.cooker-open-view svg, .voice-view-actions svg { width: 24px; height: 24px; flex-shrink: 0; }
+.cooker-open-view:hover { background: var(--cooker-mist); }
+.voice-dialog { width: min(580px, calc(100vw - 32px)); }
+.voice-view { padding-bottom: 8px; }
+.cooker-expanded { flex-direction: column; text-align: center; gap: 24px; background: none; padding: 12px 0 24px; margin: 0; }
+.cooker-expanded .cooker-orb { flex-basis: 210px; width: 210px; height: 210px; }
+.cooker-expanded .cooker-orb-inner { inset: 22px; }
+.cooker-expanded .cooker-orb > svg { width: 88px; height: 88px; }
+.cooker-expanded .cooker-identity { justify-content: center; align-items: center; flex-direction: column; gap: 9px; margin-bottom: 18px; }
+.cooker-expanded .cooker-cook { font-size: 40px; }
+.cooker-expanded .cooker-er { font-size: 38px; }
+.cooker-expanded .cooker-identity > span:last-child { font-size: 11px; }
+.cooker-expanded .cooker-state strong { font-size: 18px; }
+.cooker-expanded .cooker-state p, .cooker-expanded .cooker-transcript { font-size: 13px; line-height: 1.8; }
+.voice-recipe-context { border-block: 1px solid var(--line); padding: 16px 0; margin-bottom: 18px; }
+.voice-recipe-context > span { display: block; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.voice-recipe-context > p { font-family: Counter, sans-serif; font-size: 17px; line-height: 1.6; }
+.voice-view-actions { display: flex; flex-direction: column; gap: 10px; }
+.voice-type-link { color: var(--leaf); text-decoration: underline; text-underline-offset: 4px; min-height: 44px; padding: 10px; }
+.voice-type-link:hover { background: var(--cooker-mist); }
+@media (max-width: 700px) {
+  .cooker-entry { flex-direction: column; align-items: stretch; gap: 0; margin-bottom: 22px; }
+  .cooker-open-view { align-self: flex-end; font-size: 11px; margin-top: 4px; }
+  .cooker-expanded .cooker-orb { flex-basis: 172px; width: 172px; height: 172px; }
+  .voice-dialog { width: calc(100vw - 24px); }
 }
