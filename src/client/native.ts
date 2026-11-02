@@ -71,12 +71,16 @@ export async function initializeNativeApp(client: NativeAuthClient | null): Prom
   }
   await NativeApp.addListener('appUrlOpen', ({ url }) => { void receive(url) })
   await NativeApp.addListener('backButton', ({ canGoBack }) => { void nativeBack(canGoBack) })
+  const pauseCapture = () => {
+    void client?.auth.stopAutoRefresh()
+    window.dispatchEvent(new Event('vantagallu:app-background'))
+  }
+  // Android onPause precedes onStop/appStateChange. Stop capture immediately
+  // even when another activity is opened and closed before onStop executes.
+  await NativeApp.addListener('pause', pauseCapture)
   await NativeApp.addListener('appStateChange', ({ isActive }) => {
     if (isActive) void client?.auth.startAutoRefresh()
-    else {
-      void client?.auth.stopAutoRefresh()
-      window.dispatchEvent(new Event('vantagallu:app-background'))
-    }
+    else pauseCapture()
   })
   const launch = await NativeApp.getLaunchUrl()
   if (launch?.url) await receive(launch.url)
