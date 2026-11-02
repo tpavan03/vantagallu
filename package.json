@@ -9,7 +9,7 @@
     "dev:api": "tsx watch scripts/dev-api.ts",
     "build": "tsc -b && vite build && node scripts/generate-sw.mjs",
     "typecheck": "tsc -b",
-    "lint": "oxlint",
+    "lint": "oxlint --config .oxlintrc.json src server api scripts tests vite.config.ts vitest.config.ts playwright.config.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "preview": "vite preview"
