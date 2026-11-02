@@ -31,4 +31,4 @@ Voice pause closes microphone capture and transport without ending the cooking s
 
 Open voice view is available before the cooking surface. The shared dialog expands the same COOKer component and includes the current recipe step. Starting voice opens this view within the Talk click gesture. Back to recipe closes only the view; Pause voice stops capture and transport. The recipe ID, saved context and confirmed actions survive either action.
 
-Reduced-motion disables decorative movement without changing cooking state. Native installation and background audio/alarms require separate device verification; the web app supports foreground cooking and persistent session recovery.
+Reduced-motion disables decorative movement without changing cooking state. Android uses the same shared dialogs and saved-session runtime, with app-owned Back handling and native microphone permission. Backgrounding pauses voice; it does not finish the cooking session or stop its absolute timers. The web app remains installable as a PWA. Background listening and reliable native alarms are outside this release.

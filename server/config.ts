@@ -1,4 +1,5 @@
 import { unavailable } from './errors.ts'
+import { ANDROID_ORIGIN } from '../src/domain/mobile.ts'
 
 export interface ServerConfig {
   supabaseUrl: string
@@ -23,7 +24,7 @@ export function readConfig(env: Record<string, string | undefined> = process.env
   return {
     supabaseUrl: (env.SUPABASE_URL ?? '').replace(/\/$/, ''), serviceKey: env.SUPABASE_SERVICE_ROLE_KEY ?? '',
     allowedEmails: (env.VANTAGALLU_ALLOWED_EMAILS ?? '').split(',').map(email => email.trim().toLowerCase()).filter(Boolean),
-    allowedOrigins: (env.VANTAGALLU_ALLOWED_ORIGINS ?? '').split(',').map(origin => origin.trim().replace(/\/$/, '')).filter(Boolean),
+    allowedOrigins: [...new Set([ANDROID_ORIGIN, ...(env.VANTAGALLU_ALLOWED_ORIGINS ?? '').split(',').map(origin => origin.trim().replace(/\/$/, '')).filter(Boolean)])],
     geminiKey: env.VANTAGALLU_GEMINI_API_KEY ?? '', deepseekKey: env.VANTAGALLU_DEEPSEEK_API_KEY ?? '',
     geminiModel: env.VANTAGALLU_GEMINI_MODEL ?? 'gemini-3.8-live', deepseekModel: env.VANTAGALLU_DEEPSEEK_MODEL ?? 'deepseek-flash',
     dailyChatLimit: bounded(env.VANTAGALLU_DAILY_CHAT_LIMIT, 60, 500), sessionChatLimit: bounded(env.VANTAGALLU_SESSION_CHAT_LIMIT, 40, 200),

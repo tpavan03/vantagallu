@@ -77,6 +77,14 @@ Controls use 10px corners, dialogs 20px. Ingredients use illustrated circular co
 
 ## Components
 
+The Android package bundles the same kitchen interface and fonts. Its native
+SystemBars adapter owns safe-area variables; the shared stylesheet adds top
+and side document padding and lifts the existing controls above the gesture
+area. Android Back closes the canonical dialog first, then minimizes the app.
+App backgrounding pauses voice without ending the cooking session. Native
+permission prompts remain Android-owned; no simulated microphone success is
+shown. Release WebView debugging is disabled.
+
 CookingSetupFields is shared by the source preview and active-session setup dialog. Whole-row pantry controls pair explicit Have/Missing text with tick/cross marks; availability never imitates an ingredient-add action. Gas and induction are labeled native radio choices. The ingredient setup list alone scrolls inside its bounded area, while the shared dialog retains natural reading and keyboard behavior. Current-step heat guidance comes from the domain helper and selected appliance, never an invented sensor value.
 
 KitchenApp.tsx is the UI boundary. It consumes shared Recipe/CookingSession/VoiceStatus/SaveStatus domain types and callback props supplied by App.tsx. It owns only transient view state: dialogs, form drafts, pending action locks and filters. Runtime, authorization, persistence, model calls, microphone transport and confirmed cooking mutations belong to App/client/domain/server owners.

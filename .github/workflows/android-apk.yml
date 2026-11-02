@@ -1,0 +1,70 @@
+name: Vantagallu Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vantagallu-android-apk
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - run: npm ci
+      - name: Check application and native callback behavior
+        run: npm run lint && npm test
+      - name: Bundle the application with public client configuration
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          node --input-type=module -e "if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) throw new Error('Public client configuration is missing')"
+          npm run android:sync
+      - name: Prepare owner signing identity
+        env:
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          import os,base64
+          from pathlib import Path
+          key=os.environ['ANDROID_RELEASE_KEYSTORE_BASE64'];password=os.environ['ANDROID_RELEASE_KEYSTORE_PASSWORD']
+          if not key or not password:raise SystemExit('Owner release signing configuration is missing.')
+          folder=Path('.secrets/android');folder.mkdir(parents=True,exist_ok=True);folder.chmod(0o700)
+          path=folder/'vantagallu-release.jks';path.write_bytes(base64.b64decode(key,validate=True));path.chmod(0o600)
+          properties=Path('android/key.properties')
+          properties.write_text('storeFile=../../.secrets/android/vantagallu-release.jks\nstorePassword='+password+'\nkeyAlias=vantagallu\nkeyPassword='+password+'\n');properties.chmod(0o600)
+          Path('android/local.properties').write_text('sdk.dir='+os.environ['ANDROID_HOME']+'\n')
+          PY
+      - name: Build signed release and isolated device-test APK
+        working-directory: android
+        run: ./gradlew assembleRelease assembleDebug --no-daemon --console=plain
+      - name: Prepare artifacts
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/release/app-release.apk release/Vantagallu-1.0.0.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/Vantagallu-debug-test.apk
+          cd release
+          sha256sum Vantagallu-1.0.0.apk > SHA256SUMS.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Vantagallu-Android-1.0.0
+          path: release/
+          retention-days: 30
+          if-no-files-found: error

@@ -3,7 +3,8 @@ import type { KitchenAppProps } from '../components/KitchenApp'
 import type { CookingCommand, CookingSession, CookingTimer, Recipe, SaveStatus, VoiceStatus } from '../domain/types'
 import { applyCookingCommand, createCookingSession, ingredientAmount, sessionIngredients } from '../domain/session'
 import { api, ApiError, streamChat } from './api'
-import { signIn, supabase } from './auth'
+import { signIn, signInWithGoogle, supabase } from './auth'
+import { apiBaseUrl, AUTH_CALLBACK_ERROR } from './native'
 import { loadStore, saveStore, type CookingStore, type PendingCommand } from './cache'
 import { createVoiceController } from './voice'
 
@@ -11,7 +12,7 @@ type Owner = { id: string; email?: string }
 type Capabilities = { database: boolean; ownerAccess: boolean; chat: boolean; voice: boolean }
 const disabled: Capabilities = { database: false, ownerAccess: false, chat: false, voice: false }
 const intentKey = 'vantagallu:sign-in-intent'
-const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+const apiBase = apiBaseUrl()
 const messageOf = (error: unknown) => error instanceof Error ? error.message : typeof error === 'string' ? error : 'This action could not finish. Your confirmed cooking session is preserved.'
 const activeSession = (store: CookingStore) => store.sessions.find(session => session.id === store.currentId) || null
 const bounded = <T,>(promise: PromiseLike<T>, milliseconds = 15000): Promise<T> => new Promise((resolve, reject) => {
@@ -246,10 +247,14 @@ export function useCookingRuntime(recipes: Recipe[]): KitchenAppProps {
       else { void refreshCapabilities(); void runSafely(syncPending).catch(() => {}) }
     }
     window.addEventListener('online', networkChanged); window.addEventListener('offline', networkChanged)
+    const onNativeBackground = () => stopMedia()
+    const onNativeAuthError = () => { setError(AUTH_CALLBACK_ERROR); setAuthPending(false) }
+    window.addEventListener('vantagallu:app-background', onNativeBackground)
+    window.addEventListener('vantagallu:auth-error', onNativeAuthError)
     void refreshCapabilities()
     // This mutable counter intentionally invalidates every outstanding account request.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    return () => { stopped = true; alive.current = false; epoch.current++; stopMedia(true); subscription?.data.subscription.unsubscribe(); window.removeEventListener('online', networkChanged); window.removeEventListener('offline', networkChanged) }
+    return () => { stopped = true; alive.current = false; epoch.current++; stopMedia(true); subscription?.data.subscription.unsubscribe(); window.removeEventListener('online', networkChanged); window.removeEventListener('offline', networkChanged); window.removeEventListener('vantagallu:app-background', onNativeBackground); window.removeEventListener('vantagallu:auth-error', onNativeAuthError) }
     // Account lifecycle owns these refs; callbacks always read the latest store.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -349,7 +354,7 @@ export function useCookingRuntime(recipes: Recipe[]): KitchenAppProps {
         const current = activeSession(storeRef.current)
         if (!ownerRef.current && current) localStorage.setItem(intentKey, JSON.stringify({ sessionId: current.id, createdAt: Date.now() }))
         if (email) { await bounded(signIn(email)); setAuthMessage('Sign-in link requested. Check your email; opening it will connect this device’s current cooking session to your account.') }
-        else { const result = await bounded(supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })); if (result.error) throw result.error }
+        else await bounded(signInWithGoogle())
       } catch (failure) { setError(messageOf(failure)) } finally { setAuthPending(false) }
     },
     onSignOut: async () => {

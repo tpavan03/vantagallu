@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import KitchenApp from './components/KitchenApp'
 import { recipeCatalog } from './data/recipes'
 import { useCookingRuntime } from './client/useCookingRuntime'
+import { isNativeApp } from './client/native'
 
 export default function App() {
   const props = useCookingRuntime(recipeCatalog)
   const [update, setUpdate] = useState<ServiceWorker | null>(null)
   useEffect(() => {
-    if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return
+    if (isNativeApp() || !import.meta.env.PROD || !('serviceWorker' in navigator)) return
     let disposed = false
     void navigator.serviceWorker.register('/sw.js').then(registration => {
       if (disposed) return

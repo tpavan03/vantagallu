@@ -1,4 +1,5 @@
 import { supabase } from './auth'
+import { apiBaseUrl } from './native'
 import type { CookingSession } from '../domain/types'
 
 export class ApiError extends Error {
@@ -7,7 +8,7 @@ export class ApiError extends Error {
   session?: CookingSession
   constructor(message: string, status: number, code = '', session?: CookingSession) { super(message); this.name = 'ApiError'; this.status = status; this.code = code; this.session = session }
 }
-const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+const base = apiBaseUrl()
 export async function apiFetch(path: string, body?: unknown, signal?: AbortSignal): Promise<Response> {
   const auth = await supabase?.auth.getSession()
   const token = auth?.data.session?.access_token

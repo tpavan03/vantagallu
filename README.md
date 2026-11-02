@@ -16,6 +16,8 @@ Google sign-in and the exact production redirect are configured. AI/cloud access
 
 ## Use on a phone
 
+The signed Android app is distributed through the [v1.0.0 GitHub release](https://github.com/tpavan03/vantagallu/releases/tag/v1.0.0). Download **Vantagallu-1.0.0.apk** while signed into GitHub with access to this private repository. See [Android installation and builds](docs/android.md). Its interface and recipes are bundled locally; AI and cloud sessions use the existing production backend.
+
 Open the application in Android Chrome or iPhone Safari, sign in, choose a recipe and tap Talk. Allow microphone access when requested. Use the browser’s Install app or Add to Home Screen action to keep Vantagallu on the home screen.
 
 Open voice view expands COOKer’s live blob, transcript and current cooking step. Back to recipe keeps voice active; Pause voice stops the microphone while retaining the cooking session.

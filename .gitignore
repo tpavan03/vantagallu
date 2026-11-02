@@ -31,3 +31,10 @@ supabase/.temp/
 *.sln
 *.sw?
 .env*
+
+# Personal signing identity and native build products stay local.
+.secrets/
+release/
+android/key.properties
+*.jks
+*.keystore
